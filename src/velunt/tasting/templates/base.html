@@ -1,0 +1,18 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="nb">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>{% block title %}Velunt{% endblock %}</title>
+    <link rel="stylesheet" href="{% static 'vendor/pico.min.css' %}">
+    {% block extra_head %}{% endblock %}
+</head>
+<body>
+    <main class="container">
+        {% block content %}{% endblock %}
+    </main>
+    <script src="{% static 'vendor/htmx.min.js' %}"></script>
+    {% block extra_js %}{% endblock %}
+</body>
+</html>
