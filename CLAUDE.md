@@ -70,7 +70,7 @@ Event and scorecard IDs must be short enough for humans to type, but not guessab
 ## Testing
 
 - Use `pytest` as the test runner.
-- Tests live in a top-level `tests/` directory.
+- Tests live in a top-level `tests/` directory, with subdirectories mirroring the package structure (e.g. `tests/tasting/` for `velunt.tasting`).
 - **Test naming**: `test_when_<condition>_<subject>_should_<assertion>`
   - `<condition>` — the given/when precondition.
   - `<subject>` — what is being tested; use `it` if the test class already names the function under test.
