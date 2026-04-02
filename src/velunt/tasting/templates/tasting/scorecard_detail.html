@@ -1,0 +1,40 @@
+{% extends "base.html" %}
+
+{% block title %}Dommerskjema — {{ scorecard.judge_name }} — Velunt{% endblock %}
+
+{% block content %}
+<article>
+    <header>
+        <h1>Dommerskjema: {{ scorecard.judge_name }}</h1>
+        <p>
+            <a href="{% url 'tasting:event_detail' scorecard.event.public_id %}">
+                {{ scorecard.event.description }}
+            </a>
+            — {{ scorecard.event.event_date|date:"j. F Y" }}
+        </p>
+    </header>
+
+    <section>
+        <details>
+            <summary>Lenke til dette dommerskjemaet</summary>
+            <p>
+                <code id="scorecard-url">{{ request.build_absolute_uri }}</code>
+                <button onclick="navigator.clipboard.writeText(document.getElementById('scorecard-url').textContent)">
+                    Kopier lenke
+                </button>
+            </p>
+        </details>
+    </section>
+
+    {% if scorecard.event.state == "open" %}
+        <section>
+            {# Score entry form will be added in step 6 #}
+            <p>Poengregistrering kommer snart.</p>
+        </section>
+    {% elif scorecard.event.state == "closed" %}
+        <section>
+            <p>Arrangementet er avsluttet. Dommerskjemaet er nå skrivebeskyttet.</p>
+        </section>
+    {% endif %}
+</article>
+{% endblock %}
