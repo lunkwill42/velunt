@@ -1,5 +1,6 @@
 from django.conf import settings
 from django.db import models
+from django.urls import reverse
 from django.utils import timezone
 
 from velunt.tasting.scoring import SCORING_SYSTEM_CHOICES
@@ -32,6 +33,9 @@ class Event(models.Model):
 
     def __str__(self):
         return self.description
+
+    def get_absolute_url(self):
+        return reverse("tasting:event_detail", args=[self.public_id])
 
     @property
     def state(self):
