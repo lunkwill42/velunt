@@ -2,6 +2,14 @@
 
 {% block title %}Dommerskjema — {{ scorecard.judge_name }} — Velunt{% endblock %}
 
+{% block extra_head %}
+<style>
+    input[type="range"].unset {
+        opacity: 0.3;
+    }
+</style>
+{% endblock %}
+
 {% block content %}
 <article>
     <header>
@@ -27,13 +35,16 @@
     </section>
 
     {% if scorecard.event.state == "open" %}
-        <section>
-            {# Score entry form will be added in step 6 #}
-            <p>Poengregistrering kommer snart.</p>
-        </section>
+        <div id="score-lines">
+            {% include "tasting/_score_lines.html" %}
+        </div>
+
     {% elif scorecard.event.state == "closed" %}
         <section>
             <p>Arrangementet er avsluttet. Dommerskjemaet er nå skrivebeskyttet.</p>
+            {% for line in lines %}
+                {% include "tasting/_score_line.html" with line=line scorecard=scorecard scoring_system=scoring_system %}
+            {% endfor %}
         </section>
     {% endif %}
 </article>
