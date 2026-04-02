@@ -1,0 +1,34 @@
+{% extends "base.html" %}
+
+{% block title %}{{ event.description }} — Velunt{% endblock %}
+
+{% block content %}
+<article>
+    <header>
+        <h1>{{ event.description }}</h1>
+        <p>{{ event.event_date|date:"j. F Y" }}</p>
+
+        {% if event.state == "not_yet_open" %}
+            <mark>Arrangementet har ikke startet ennå</mark>
+        {% elif event.state == "open" %}
+            <mark>Åpent for registrering</mark>
+        {% elif event.state == "closed" %}
+            <mark>Avsluttet</mark>
+        {% endif %}
+    </header>
+
+    <section>
+        {{ qr_svg|safe }}
+    </section>
+
+    {% if event.state == "open" %}
+        <section>
+            {# Scorecard creation form will be added in step 5 #}
+        </section>
+    {% elif event.state == "closed" %}
+        <section>
+            <p>Resultater kommer snart.</p>
+        </section>
+    {% endif %}
+</article>
+{% endblock %}
