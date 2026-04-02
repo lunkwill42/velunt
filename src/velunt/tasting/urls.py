@@ -16,4 +16,14 @@ urlpatterns = [
         views.scorecard_detail,
         name="scorecard_detail",
     ),
+    path(
+        "scorecard/<str:public_id>/save-line/",
+        views.save_score_line,
+        name="save_score_line",
+    ),
+    path(
+        "scorecard/<str:public_id>/add-line/",
+        views.add_score_line,
+        name="add_score_line",
+    ),
 ]
