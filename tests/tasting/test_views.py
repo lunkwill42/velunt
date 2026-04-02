@@ -3,7 +3,7 @@ import datetime
 import pytest
 from django.utils import timezone
 
-from velunt.tasting.models import Event
+from velunt.tasting.models import Event, Scorecard
 
 
 @pytest.fixture()
@@ -77,3 +77,96 @@ class TestEventDetailView:
         response = client.get(f"/event/{event.public_id}/")
         content = response.content.decode()
         assert "Juleølsmaking 2026" in content
+
+    def test_when_session_has_scorecard_it_should_show_continue_link(
+        self, client, make_event
+    ):
+        event = make_event()
+        scorecard = Scorecard.objects.create(event=event, judge_name="Morten")
+        session = client.session
+        session[event.public_id] = scorecard.public_id
+        session.save()
+        response = client.get(f"/event/{event.public_id}/")
+        content = response.content.decode()
+        assert "Fortsett ditt dommerskjema" in content
+
+    def test_when_open_and_no_session_it_should_show_name_form(
+        self, client, make_event
+    ):
+        event = make_event()
+        response = client.get(f"/event/{event.public_id}/")
+        content = response.content.decode()
+        assert "Opprett dommerskjema" in content
+
+
+class TestCreateScorecardView:
+    def test_when_posting_valid_name_it_should_create_scorecard(
+        self, client, make_event
+    ):
+        event = make_event()
+        response = client.post(
+            f"/event/{event.public_id}/create-scorecard/",
+            {"judge_name": "Morten"},
+        )
+        assert Scorecard.objects.filter(event=event, judge_name="Morten").exists()
+        scorecard = Scorecard.objects.get(event=event, judge_name="Morten")
+        assert response.status_code == 302
+        assert f"/scorecard/{scorecard.public_id}/" in response.url
+
+    def test_when_posting_valid_name_it_should_store_in_session(
+        self, client, make_event
+    ):
+        event = make_event()
+        client.post(
+            f"/event/{event.public_id}/create-scorecard/",
+            {"judge_name": "Morten"},
+        )
+        scorecard = Scorecard.objects.get(event=event, judge_name="Morten")
+        assert client.session[event.public_id] == scorecard.public_id
+
+    def test_when_posting_duplicate_name_it_should_show_error(self, client, make_event):
+        event = make_event()
+        Scorecard.objects.create(event=event, judge_name="Morten")
+        response = client.post(
+            f"/event/{event.public_id}/create-scorecard/",
+            {"judge_name": "Morten"},
+        )
+        assert response.status_code == 200
+        content = response.content.decode()
+        assert "allerede i bruk" in content
+
+    def test_when_event_is_closed_it_should_redirect_to_event_page(
+        self, client, make_event
+    ):
+        event = make_event(closed_at=timezone.now())
+        response = client.post(
+            f"/event/{event.public_id}/create-scorecard/",
+            {"judge_name": "Morten"},
+        )
+        assert response.status_code == 302
+        assert f"/event/{event.public_id}/" in response.url
+        assert not Scorecard.objects.filter(event=event).exists()
+
+    def test_when_using_get_it_should_return_405(self, client, make_event):
+        event = make_event()
+        response = client.get(f"/event/{event.public_id}/create-scorecard/")
+        assert response.status_code == 405
+
+
+class TestScorecardDetailView:
+    def test_when_scorecard_exists_it_should_return_200(self, client, make_event):
+        event = make_event()
+        scorecard = Scorecard.objects.create(event=event, judge_name="Morten")
+        response = client.get(f"/scorecard/{scorecard.public_id}/")
+        assert response.status_code == 200
+
+    def test_when_scorecard_not_found_it_should_return_404(self, client, db):
+        response = client.get("/scorecard/XXXXXX/")
+        assert response.status_code == 404
+
+    def test_when_rendered_it_should_show_judge_name(self, client, make_event):
+        event = make_event()
+        scorecard = Scorecard.objects.create(event=event, judge_name="Morten")
+        response = client.get(f"/scorecard/{scorecard.public_id}/")
+        content = response.content.decode()
+        assert "Morten" in content

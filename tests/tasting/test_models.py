@@ -1,9 +1,10 @@
 import datetime
 
 import pytest
+from django.db import IntegrityError
 from django.utils import timezone
 
-from velunt.tasting.models import Event
+from velunt.tasting.models import Event, Scorecard
 
 
 @pytest.fixture()
@@ -78,3 +79,28 @@ class TestEventStr:
     def test_when_converted_to_string_it_should_return_description(self, make_event):
         event = make_event(description="Juleølsmaking 2026")
         assert str(event) == "Juleølsmaking 2026"
+
+
+class TestScorecard:
+    def test_when_created_it_should_have_a_6_char_public_id(self, make_event):
+        event = make_event()
+        scorecard = Scorecard.objects.create(event=event, judge_name="Morten")
+        assert len(scorecard.public_id) == 6
+
+    def test_when_converted_to_string_it_should_return_judge_name(self, make_event):
+        event = make_event()
+        scorecard = Scorecard.objects.create(event=event, judge_name="Morten")
+        assert str(scorecard) == "Morten"
+
+    def test_when_duplicate_name_in_same_event_it_should_raise(self, make_event):
+        event = make_event()
+        Scorecard.objects.create(event=event, judge_name="Morten")
+        with pytest.raises(IntegrityError):
+            Scorecard.objects.create(event=event, judge_name="Morten")
+
+    def test_when_same_name_in_different_events_it_should_succeed(self, make_event):
+        event1 = make_event(description="Smak 1")
+        event2 = make_event(description="Smak 2")
+        Scorecard.objects.create(event=event1, judge_name="Morten")
+        scorecard2 = Scorecard.objects.create(event=event2, judge_name="Morten")
+        assert scorecard2.pk is not None
