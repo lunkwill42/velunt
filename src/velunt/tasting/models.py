@@ -3,7 +3,7 @@ from django.db import models
 from django.urls import reverse
 from django.utils import timezone
 
-from velunt.tasting.scoring import SCORING_SYSTEM_CHOICES
+from velunt.tasting.scoring import SCORING_SYSTEM_CHOICES, get_scoring_system
 from velunt.tasting.utils import generate_public_id
 
 
@@ -72,3 +72,43 @@ class Scorecard(models.Model):
 
     def __str__(self):
         return self.judge_name
+
+
+class ScorecardLine(models.Model):
+    scorecard = models.ForeignKey(
+        Scorecard,
+        on_delete=models.CASCADE,
+        related_name="lines",
+    )
+    beer_number = models.PositiveIntegerField()
+    scores = models.JSONField(default=dict)
+    total_score = models.DecimalField(
+        max_digits=6,
+        decimal_places=2,
+        null=True,
+        blank=True,
+    )
+    comment = models.TextField(blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(
+                fields=["scorecard", "beer_number"],
+                name="unique_beer_per_scorecard",
+            ),
+        ]
+        ordering = ["beer_number"]
+
+    def __str__(self):
+        return f"Øl #{self.beer_number}"
+
+    def save(self, *args, **kwargs):
+        self._compute_total_score()
+        super().save(*args, **kwargs)
+
+    def _compute_total_score(self):
+        """Compute and store total_score from the scoring system."""
+        scoring_system = get_scoring_system(self.scorecard.event.scoring_system)
+        self.total_score = scoring_system.calculate_total(self.scores)
