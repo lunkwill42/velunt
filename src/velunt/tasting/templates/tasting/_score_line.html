@@ -1,0 +1,51 @@
+{% load tasting_tags %}
+<details id="line-{{ line.beer_number }}" {% if keep_open or line.total_score is None %}open{% endif %}>
+    <summary>
+        <strong>Øl #{{ line.beer_number }}</strong>
+        {% if line.total_score is not None %}
+            —
+            {% for dim in scoring_system.dimensions %}{% with val=line.scores|dictget:dim.key %}{% if val is not None %}{% if not forloop.first %} × {% endif %}{{ val }}{% endif %}{% endwith %}{% endfor %}
+            = {{ line.total_score }}
+        {% else %}
+            — <em>ufullstendig</em>
+        {% endif %}
+    </summary>
+
+    <form hx-post="{% url 'tasting:save_score_line' scorecard.public_id %}"
+          hx-target="#line-{{ line.beer_number }}"
+          hx-swap="outerHTML"
+          hx-trigger="change">
+        {% csrf_token %}
+        <input type="hidden" name="beer_number" value="{{ line.beer_number }}">
+
+        {% for dim in scoring_system.dimensions %}
+            {% with current=line.scores|dictget:dim.key %}
+            <label for="dim-{{ line.beer_number }}-{{ dim.key }}">
+                {{ dim.label }}
+                <output id="val-{{ line.beer_number }}-{{ dim.key }}">{% if current is not None %}{{ current }}{% else %}–{% endif %}</output>
+            </label>
+            <input type="range"
+                   id="dim-{{ line.beer_number }}-{{ dim.key }}"
+                   {% if current is not None %}name="{{ dim.key }}"{% endif %}
+                   data-name="{{ dim.key }}"
+                   min="{{ dim.min_value|numformat }}"
+                   max="{{ dim.max_value|numformat }}"
+                   step="{{ dim.increment|numformat }}"
+                   value="{% if current is not None %}{{ current }}{% else %}{{ dim.min_value|numformat }}{% endif %}"
+                   {% if current is None %}class="unset"{% endif %}
+                   oninput="
+                       if (!this.name) this.name = this.dataset.name;
+                       this.classList.remove('unset');
+                       document.getElementById('val-{{ line.beer_number }}-{{ dim.key }}').textContent = this.value;
+                   ">
+            <small>{{ dim.min_value|numformat }}–{{ dim.max_value|numformat }}</small>
+            {% endwith %}
+        {% endfor %}
+
+        <label for="comment-{{ line.beer_number }}">Kommentar</label>
+        <textarea id="comment-{{ line.beer_number }}"
+                  name="comment"
+                  rows="2"
+                  placeholder="Smaksnotater...">{{ line.comment }}</textarea>
+    </form>
+</details>
