@@ -3,7 +3,7 @@ import datetime
 import pytest
 from django.utils import timezone
 
-from velunt.tasting.models import Event, Scorecard
+from velunt.tasting.models import Event, Scorecard, ScorecardLine
 
 
 @pytest.fixture()
@@ -170,3 +170,53 @@ class TestScorecardDetailView:
         response = client.get(f"/scorecard/{scorecard.public_id}/")
         content = response.content.decode()
         assert "Morten" in content
+
+
+class TestSaveScoreLineView:
+    @pytest.fixture()
+    def scorecard(self, make_event):
+        event = make_event()
+        return Scorecard.objects.create(event=event, judge_name="Morten")
+
+    def test_when_posting_new_beer_it_should_create_line(self, client, scorecard):
+        response = client.post(
+            f"/scorecard/{scorecard.public_id}/save-line/",
+            {"beer_number": "1", "untappd": "3.5", "julete": "4.0", "comment": "God"},
+        )
+        assert response.status_code == 200
+        line = ScorecardLine.objects.get(scorecard=scorecard, beer_number=1)
+        assert line.scores["untappd"] == "3.5"
+        assert line.comment == "God"
+
+    def test_when_posting_existing_beer_it_should_update_line(self, client, scorecard):
+        ScorecardLine.objects.create(
+            scorecard=scorecard, beer_number=1, scores={"untappd": "2.0"}
+        )
+        client.post(
+            f"/scorecard/{scorecard.public_id}/save-line/",
+            {"beer_number": "1", "untappd": "3.5", "julete": "4.0"},
+        )
+        line = ScorecardLine.objects.get(scorecard=scorecard, beer_number=1)
+        assert line.scores["untappd"] == "3.5"
+        assert line.scores["julete"] == "4.0"
+
+    def test_when_event_is_closed_it_should_return_403(self, client, make_event):
+        event = make_event(closed_at=timezone.now())
+        scorecard = Scorecard.objects.create(event=event, judge_name="Morten")
+        response = client.post(
+            f"/scorecard/{scorecard.public_id}/save-line/",
+            {"beer_number": "1", "untappd": "3.5", "julete": "4.0"},
+        )
+        assert response.status_code == 403
+
+    def test_when_response_returned_it_should_be_html_partial(self, client, scorecard):
+        response = client.post(
+            f"/scorecard/{scorecard.public_id}/save-line/",
+            {"beer_number": "1"},
+        )
+        content = response.content.decode()
+        assert "Øl #1" in content
+
+    def test_when_using_get_it_should_return_405(self, client, scorecard):
+        response = client.get(f"/scorecard/{scorecard.public_id}/save-line/")
+        assert response.status_code == 405

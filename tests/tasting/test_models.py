@@ -1,10 +1,11 @@
 import datetime
+from decimal import Decimal
 
 import pytest
 from django.db import IntegrityError
 from django.utils import timezone
 
-from velunt.tasting.models import Event, Scorecard
+from velunt.tasting.models import Event, Scorecard, ScorecardLine
 
 
 @pytest.fixture()
@@ -104,3 +105,50 @@ class TestScorecard:
         Scorecard.objects.create(event=event1, judge_name="Morten")
         scorecard2 = Scorecard.objects.create(event=event2, judge_name="Morten")
         assert scorecard2.pk is not None
+
+
+@pytest.fixture()
+def scorecard(make_event):
+    event = make_event()
+    return Scorecard.objects.create(event=event, judge_name="Morten")
+
+
+class TestScorecardLine:
+    def test_when_all_scores_present_save_should_compute_total(self, scorecard):
+        line = ScorecardLine.objects.create(
+            scorecard=scorecard,
+            beer_number=1,
+            scores={"untappd": "3.5", "julete": "4.0"},
+        )
+        assert line.total_score == Decimal("14.00")
+
+    def test_when_scores_incomplete_total_should_be_none(self, scorecard):
+        line = ScorecardLine.objects.create(
+            scorecard=scorecard,
+            beer_number=1,
+            scores={"untappd": "3.5"},
+        )
+        assert line.total_score is None
+
+    def test_when_scores_empty_total_should_be_none(self, scorecard):
+        line = ScorecardLine.objects.create(
+            scorecard=scorecard,
+            beer_number=1,
+            scores={},
+        )
+        assert line.total_score is None
+
+    def test_when_scores_updated_save_should_recompute_total(self, scorecard):
+        line = ScorecardLine.objects.create(
+            scorecard=scorecard,
+            beer_number=1,
+            scores={"untappd": "3.5", "julete": "4.0"},
+        )
+        assert line.total_score == Decimal("14.00")
+        line.scores = {"untappd": "5.0", "julete": "5.0"}
+        line.save()
+        assert line.total_score == Decimal("25.00")
+
+    def test_when_converted_to_string_it_should_show_beer_number(self, scorecard):
+        line = ScorecardLine(scorecard=scorecard, beer_number=3)
+        assert str(line) == "Øl #3"
