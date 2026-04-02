@@ -23,7 +23,28 @@
 
     {% if event.state == "open" %}
         <section>
-            {# Scorecard creation form will be added in step 5 #}
+            {% if existing_scorecard %}
+                <p>
+                    <a href="{% url 'tasting:scorecard_detail' existing_scorecard.public_id %}" role="button">
+                        Fortsett ditt dommerskjema ({{ existing_scorecard.judge_name }})
+                    </a>
+                </p>
+            {% else %}
+                <h2>Opprett dommerskjema</h2>
+                <form method="post" action="{% url 'tasting:create_scorecard' event.public_id %}">
+                    {% csrf_token %}
+                    {% for field in form %}
+                        <label for="{{ field.id_for_label }}">{{ field.label }}</label>
+                        {{ field }}
+                        {% if field.errors %}
+                            {% for error in field.errors %}
+                                <small class="error">{{ error }}</small>
+                            {% endfor %}
+                        {% endif %}
+                    {% endfor %}
+                    <button type="submit">Opprett</button>
+                </form>
+            {% endif %}
         </section>
     {% elif event.state == "closed" %}
         <section>
