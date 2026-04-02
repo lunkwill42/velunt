@@ -41,3 +41,30 @@ class Event(models.Model):
         if today < self.event_date:
             return "not_yet_open"
         return "open"
+
+
+class Scorecard(models.Model):
+    public_id = models.CharField(
+        max_length=6,
+        unique=True,
+        default=generate_public_id,
+        editable=False,
+    )
+    event = models.ForeignKey(
+        Event,
+        on_delete=models.CASCADE,
+        related_name="scorecards",
+    )
+    judge_name = models.CharField(max_length=100)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(
+                fields=["event", "judge_name"],
+                name="unique_judge_per_event",
+            ),
+        ]
+
+    def __str__(self):
+        return self.judge_name
