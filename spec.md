@@ -7,7 +7,7 @@ closed the system presents ranked results and full scorecards.
 
 ## Tech Stack
 
-- **Backend:** Python 3.13, Django 5.2 LTS (supported until April 2028)
+- **Backend:** Python 3.14, Django 5.2 LTS (supported until April 2028)
 - **Frontend:** Django templates + HTMX + Pico CSS (mobile-first). Static assets vendored, no CDN.
 - **Database:** PostgreSQL
 - **Deployment:** Docker Compose on a VPS
@@ -18,9 +18,9 @@ closed the system presents ranked results and full scorecards.
 
 ## Data Model
 
-Tasting models live in `velunt.tasting`. A separate `velunt.accounts` app holds
-the custom User model. The Django project configuration lives under the `velunt`
-namespace (e.g. `velunt.settings`, `velunt.urls`).
+All Python source code lives under `src/`. Tasting models live in `velunt.tasting`.
+A separate `velunt.accounts` app holds the custom User model. The Django project
+configuration lives under the `velunt` namespace (e.g. `velunt.settings`, `velunt.urls`).
 
 ### User (velunt.accounts)
 
