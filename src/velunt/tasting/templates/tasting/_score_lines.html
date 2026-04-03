@@ -1,23 +1,29 @@
+<div class="score-line-row score-line-header">
+    <span class="score-line-beer">Øl</span>
+    {% for dim in scoring_system.dimensions %}
+        <span class="score-line-dim">{{ dim.label }}</span>
+    {% endfor %}
+    <span class="score-line-controls"></span>
+</div>
+
 {% for line in lines %}
     {% include "tasting/_score_line.html" with line=line scorecard=scorecard scoring_system=scoring_system %}
 {% endfor %}
 
-<section>
-    <h2>Legg til øl</h2>
-    {% if add_error %}
-        <p><mark>{{ add_error }}</mark></p>
-    {% endif %}
-    <form hx-post="{% url 'tasting:add_score_line' scorecard.public_id %}"
-          hx-target="#score-lines"
-          hx-swap="innerHTML">
-        {% csrf_token %}
-        <label for="new-beer-number">Ølnummer</label>
-        <input type="number"
-               id="new-beer-number"
-               name="beer_number"
-               value="{{ next_beer_number }}"
-               min="1"
-               required>
-        <button type="submit">Legg til</button>
-    </form>
-</section>
+{% if add_error %}
+    <p><mark>{{ add_error }}</mark></p>
+{% endif %}
+<form class="add-beer-form"
+      hx-post="{% url 'tasting:add_score_line' scorecard.public_id %}"
+      hx-target="#score-lines"
+      hx-swap="innerHTML">
+    {% csrf_token %}
+    <input type="number"
+           name="beer_number"
+           value="{{ next_beer_number }}"
+           min="1"
+           placeholder="#"
+           aria-label="Ølnummer"
+           required>
+    <button type="submit" title="Legg til øl">+</button>
+</form>

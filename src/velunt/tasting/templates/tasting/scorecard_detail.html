@@ -4,8 +4,157 @@
 
 {% block extra_head %}
 <style>
+    /* Reduce gutters on small screens */
+    @media (max-width: 576px) {
+        .container { padding-inline: 0.5rem; }
+    }
+
+    /* Unset sliders are faded */
     input[type="range"].unset {
         opacity: 0.3;
+    }
+
+    /* Shared grid layout for header and score line rows */
+    .score-line-row {
+        display: grid;
+        grid-template-columns: 3rem repeat({{ scoring_system.dimensions|length }}, 1fr) 1.5rem;
+        gap: 0.5rem;
+        align-items: center;
+        padding: 0.4rem 0.5rem;
+    }
+    .score-line-header {
+        font-size: 0.8rem;
+        font-weight: 600;
+        color: var(--pico-muted-color);
+        border-bottom: 1px solid var(--pico-muted-border-color);
+        margin-bottom: 0.25rem;
+    }
+    .score-line {
+        margin-bottom: 0;
+    }
+    .score-line > summary {
+        list-style: none;
+    }
+    .score-line > summary::marker,
+    .score-line > summary::-webkit-details-marker {
+        display: none;
+    }
+    /* Override Pico's float-based chevron and margin */
+    .score-line > summary::after {
+        display: none;
+    }
+    .score-line[open] > summary {
+        margin-bottom: 0;
+    }
+    .score-line-summary {
+        cursor: pointer;
+        font-variant-numeric: tabular-nums;
+    }
+    .score-line-beer {
+        font-weight: bold;
+    }
+    .score-line-dim {
+        text-align: center;
+    }
+    .score-line-controls {
+        display: flex;
+        align-items: center;
+        justify-content: flex-end;
+        gap: 0.25rem;
+    }
+    .score-line-chevron {
+        display: inline-block;
+        width: 0.5rem;
+        height: 0.5rem;
+        border-right: 2px solid var(--pico-muted-color);
+        border-bottom: 2px solid var(--pico-muted-color);
+        transform: rotate(-45deg);
+        transition: transform 0.2s;
+    }
+    .score-line[open] .score-line-chevron {
+        transform: rotate(45deg);
+    }
+    @keyframes slide-down {
+        from { opacity: 0; transform: translateY(-0.5rem); }
+        to   { opacity: 1; transform: translateY(0); }
+    }
+    @keyframes slide-up {
+        from { opacity: 1; transform: translateY(0); }
+        to   { opacity: 0; transform: translateY(-0.5rem); }
+    }
+    .score-line[open] .score-line-expanded {
+        animation: slide-down 0.2s ease-out;
+    }
+    .score-line-delete {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.3rem;
+        background: none;
+        border: none;
+        cursor: pointer;
+        padding: 0.25rem 0;
+        margin: 0.5rem 0 0;
+        width: auto;
+        font-size: 0.8rem;
+        color: var(--pico-muted-color);
+    }
+    .score-line-delete:hover {
+        color: var(--pico-del-color, #c62828);
+    }
+    .score-line-delete svg {
+        vertical-align: middle;
+    }
+    .score-line-expanded textarea {
+        resize: none;
+        overflow: hidden;
+    }
+    .confirm-delete {
+        padding: 0.5rem 0;
+    }
+    .confirm-delete p {
+        margin-bottom: 0.5rem;
+        font-size: 0.9rem;
+    }
+    .confirm-delete-actions {
+        display: flex;
+        gap: 0.5rem;
+    }
+    .confirm-delete-actions button {
+        padding: 0.3rem 0.75rem;
+        font-size: 0.8rem;
+        margin: 0;
+    }
+    .confirm-delete-yes {
+        background: var(--pico-del-color, #c62828);
+        border-color: var(--pico-del-color, #c62828);
+        color: #fff;
+    }
+
+    /* Expanded line visual boundary */
+    .score-line-expanded {
+        border-left: 3px solid var(--pico-primary);
+        padding-left: 0.75rem;
+        margin-top: 0.25rem;
+        margin-bottom: 0.5rem;
+    }
+
+    /* Compact add beer form */
+    .add-beer-form {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        margin-top: 0.5rem;
+    }
+    .add-beer-form input[type="number"] {
+        width: 5rem;
+        margin-bottom: 0;
+    }
+    .add-beer-form button {
+        width: auto;
+        padding: 0.4rem 0.75rem;
+        margin-bottom: 0;
+        font-size: 1.2rem;
+        line-height: 1;
     }
 </style>
 {% endblock %}

@@ -1,51 +1,65 @@
 {% load tasting_tags %}
-<details id="line-{{ line.beer_number }}" {% if keep_open or line.total_score is None %}open{% endif %}>
-    <summary>
-        <strong>Øl #{{ line.beer_number }}</strong>
-        {% if line.total_score is not None %}
-            —
-            {% for dim in scoring_system.dimensions %}{% with val=line.scores|dictget:dim.key %}{% if val is not None %}{% if not forloop.first %} × {% endif %}{{ val }}{% endif %}{% endwith %}{% endfor %}
-            = {{ line.total_score }}
-        {% else %}
-            — <em>ufullstendig</em>
-        {% endif %}
-    </summary>
-
-    <form hx-post="{% url 'tasting:save_score_line' scorecard.public_id %}"
-          hx-target="#line-{{ line.beer_number }}"
-          hx-swap="outerHTML"
-          hx-trigger="change">
-        {% csrf_token %}
-        <input type="hidden" name="beer_number" value="{{ line.beer_number }}">
-
+<details id="line-{{ line.beer_number }}" class="score-line" {% if keep_open or line.total_score is None %}open{% endif %}>
+    <summary class="score-line-row score-line-summary">
+        <span class="score-line-beer">#{{ line.beer_number }}</span>
         {% for dim in scoring_system.dimensions %}
-            {% with current=line.scores|dictget:dim.key %}
-            <label for="dim-{{ line.beer_number }}-{{ dim.key }}">
-                {{ dim.label }}
-                <output id="val-{{ line.beer_number }}-{{ dim.key }}">{% if current is not None %}{{ current }}{% else %}–{% endif %}</output>
-            </label>
-            <input type="range"
-                   id="dim-{{ line.beer_number }}-{{ dim.key }}"
-                   {% if current is not None %}name="{{ dim.key }}"{% endif %}
-                   data-name="{{ dim.key }}"
-                   min="{{ dim.min_value|numformat }}"
-                   max="{{ dim.max_value|numformat }}"
-                   step="{{ dim.increment|numformat }}"
-                   value="{% if current is not None %}{{ current }}{% else %}{{ dim.min_value|numformat }}{% endif %}"
-                   {% if current is None %}class="unset"{% endif %}
-                   oninput="
-                       if (!this.name) this.name = this.dataset.name;
-                       this.classList.remove('unset');
-                       document.getElementById('val-{{ line.beer_number }}-{{ dim.key }}').textContent = this.value;
-                   ">
-            <small>{{ dim.min_value|numformat }}–{{ dim.max_value|numformat }}</small>
+            {% with val=line.scores|dictget:dim.key %}
+            <span class="score-line-dim">{% if val is not None %}{{ val }}{% else %}–{% endif %}</span>
             {% endwith %}
         {% endfor %}
+        <span class="score-line-controls">
+            <span class="score-line-chevron"></span>
+        </span>
+    </summary>
 
-        <label for="comment-{{ line.beer_number }}">Kommentar</label>
-        <textarea id="comment-{{ line.beer_number }}"
-                  name="comment"
-                  rows="2"
-                  placeholder="Smaksnotater...">{{ line.comment }}</textarea>
-    </form>
+    <div class="score-line-expanded">
+        <form hx-post="{% url 'tasting:save_score_line' scorecard.public_id %}"
+              hx-target="#line-{{ line.beer_number }}"
+              hx-swap="outerHTML"
+              hx-trigger="change">
+            {% csrf_token %}
+            <input type="hidden" name="beer_number" value="{{ line.beer_number }}">
+
+            {% for dim in scoring_system.dimensions %}
+                {% with current=line.scores|dictget:dim.key %}
+                <label for="dim-{{ line.beer_number }}-{{ dim.key }}">
+                    {{ dim.label }}
+                    <output id="val-{{ line.beer_number }}-{{ dim.key }}">{% if current is not None %}{{ current }}{% else %}–{% endif %}</output>
+                </label>
+                <input type="range"
+                       id="dim-{{ line.beer_number }}-{{ dim.key }}"
+                       {% if current is not None %}name="{{ dim.key }}"{% endif %}
+                       data-name="{{ dim.key }}"
+                       min="{{ dim.min_value|numformat }}"
+                       max="{{ dim.max_value|numformat }}"
+                       step="{{ dim.increment|numformat }}"
+                       value="{% if current is not None %}{{ current }}{% else %}{{ dim.min_value|numformat }}{% endif %}"
+                       {% if current is None %}class="unset"{% endif %}
+                       oninput="
+                           if (!this.name) this.name = this.dataset.name;
+                           this.classList.remove('unset');
+                           document.getElementById('val-{{ line.beer_number }}-{{ dim.key }}').textContent = this.value;
+                       ">
+                <small>{{ dim.min_value|numformat }}–{{ dim.max_value|numformat }}</small>
+                {% endwith %}
+            {% endfor %}
+
+            <label for="comment-{{ line.beer_number }}">Kommentar</label>
+            <textarea id="comment-{{ line.beer_number }}"
+                      name="comment"
+                      rows="1"
+                      placeholder="Smaksnotater..."
+                      oninput="this.style.height='auto';this.style.height=this.scrollHeight+'px';"
+                      >{{ line.comment }}</textarea>
+        </form>
+        <div id="delete-area-{{ line.beer_number }}">
+            <button type="button"
+                    class="score-line-delete"
+                    title="Slett øl #{{ line.beer_number }}"
+                    hx-get="{% url 'tasting:confirm_delete_line' scorecard.public_id line.beer_number %}"
+                    hx-target="#delete-area-{{ line.beer_number }}"
+                    hx-swap="innerHTML"
+                    ><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 11v6"/><path d="M14 11v6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"/><path d="M3 6h18"/><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg> Slett</button>
+        </div>
+    </div>
 </details>

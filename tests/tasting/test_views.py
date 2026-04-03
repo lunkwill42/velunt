@@ -215,7 +215,7 @@ class TestSaveScoreLineView:
             {"beer_number": "1"},
         )
         content = response.content.decode()
-        assert "Øl #1" in content
+        assert "#1" in content
 
     def test_when_using_get_it_should_return_405(self, client, scorecard):
         response = client.get(f"/scorecard/{scorecard.public_id}/save-line/")
