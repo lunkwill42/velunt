@@ -31,6 +31,20 @@
         document.body.addEventListener('htmx:afterSettle', function(event) {
             autoSizeTextareas(event.detail.elt);
         });
+        /* Animate details close: intercept click, play animation, then close */
+        document.body.addEventListener('click', function(event) {
+            var summary = event.target.closest('.score-line[open] > summary');
+            if (!summary) return;
+            var details = summary.parentElement;
+            var expanded = details.querySelector('.score-line-expanded');
+            if (!expanded) return;
+            event.preventDefault();
+            expanded.style.animation = 'slide-up 0.2s ease-in forwards';
+            expanded.addEventListener('animationend', function() {
+                details.removeAttribute('open');
+                expanded.style.animation = '';
+            }, {once: true});
+        });
     </script>
     {% block extra_js %}{% endblock %}
 </body>
