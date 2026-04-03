@@ -167,6 +167,58 @@ def add_score_line(request, public_id):
     )
 
 
+def delete_score_line(request, public_id, beer_number):
+    """Delete a score line and return all lines (full re-render)."""
+    scorecard = get_object_or_404(
+        Scorecard.objects.select_related("event"), public_id=public_id
+    )
+    if request.method != "DELETE":
+        return HttpResponseNotAllowed(["DELETE"])
+    if scorecard.event.state != "open":
+        return HttpResponse("Arrangementet er lukket.", status=403)
+
+    ScorecardLine.objects.filter(scorecard=scorecard, beer_number=beer_number).delete()
+
+    scoring_system = get_scoring_system(scorecard.event.scoring_system)
+    lines = scorecard.lines.all()
+    next_beer = _next_beer_number(lines)
+
+    return render(
+        request,
+        "tasting/_score_lines.html",
+        {
+            "lines": lines,
+            "scorecard": scorecard,
+            "scoring_system": scoring_system,
+            "next_beer_number": next_beer,
+        },
+    )
+
+
+def confirm_delete_line(request, public_id, beer_number):
+    """Return the delete confirmation partial."""
+    scorecard = get_object_or_404(
+        Scorecard.objects.select_related("event"), public_id=public_id
+    )
+    return render(
+        request,
+        "tasting/_confirm_delete.html",
+        {"scorecard": scorecard, "beer_number": beer_number},
+    )
+
+
+def cancel_delete_line(request, public_id, beer_number):
+    """Return the delete button partial (restores after cancel)."""
+    scorecard = get_object_or_404(
+        Scorecard.objects.select_related("event"), public_id=public_id
+    )
+    return render(
+        request,
+        "tasting/_delete_button.html",
+        {"scorecard": scorecard, "beer_number": beer_number},
+    )
+
+
 def _get_session_scorecard(request, event):
     """Look up an existing scorecard from the session."""
     scorecard_id = request.session.get(event.public_id)

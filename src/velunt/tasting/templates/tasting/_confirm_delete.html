@@ -1,0 +1,15 @@
+<div class="confirm-delete">
+    <p>Slette øl #{{ beer_number }}?</p>
+    <div class="confirm-delete-actions">
+        <button class="confirm-delete-yes"
+                hx-delete="{% url 'tasting:delete_score_line' scorecard.public_id beer_number %}"
+                hx-target="#score-lines"
+                hx-swap="innerHTML"
+                >Ja, slett</button>
+        <button class="confirm-delete-no outline"
+                hx-get="{% url 'tasting:cancel_delete_line' scorecard.public_id beer_number %}"
+                hx-target="#delete-area-{{ beer_number }}"
+                hx-swap="innerHTML"
+                >Avbryt</button>
+    </div>
+</div>

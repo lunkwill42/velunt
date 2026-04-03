@@ -26,4 +26,19 @@ urlpatterns = [
         views.add_score_line,
         name="add_score_line",
     ),
+    path(
+        "scorecard/<str:public_id>/delete-line/<int:beer_number>/",
+        views.delete_score_line,
+        name="delete_score_line",
+    ),
+    path(
+        "scorecard/<str:public_id>/confirm-delete/<int:beer_number>/",
+        views.confirm_delete_line,
+        name="confirm_delete_line",
+    ),
+    path(
+        "scorecard/<str:public_id>/cancel-delete/<int:beer_number>/",
+        views.cancel_delete_line,
+        name="cancel_delete_line",
+    ),
 ]
