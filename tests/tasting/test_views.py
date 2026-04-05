@@ -77,7 +77,7 @@ class TestEventDetailView:
         content = response.content.decode()
         assert "1" in content  # 1 scorecard
         assert "2" in content  # 2 beers
-        assert "Dommerskjema levert" in content
+        assert "Dommerskjema registrert" in content
         assert "Øl bedømt" in content
 
     def test_when_event_page_rendered_it_should_contain_qr_svg(
