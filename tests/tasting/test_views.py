@@ -200,7 +200,25 @@ class TestSaveScoreLineView:
         assert line.scores["untappd"] == "3.5"
         assert line.scores["julete"] == "4.0"
 
-    def test_when_event_is_closed_it_should_return_403(self, client, make_event):
+    def test_when_event_is_closed_and_line_exists_it_should_return_readonly(
+        self, client, make_event
+    ):
+        event = make_event(closed_at=timezone.now())
+        scorecard = Scorecard.objects.create(event=event, judge_name="Morten")
+        ScorecardLine.objects.create(
+            scorecard=scorecard, beer_number=1, scores={"untappd": "3.0"}
+        )
+        response = client.post(
+            f"/scorecard/{scorecard.public_id}/save-line/",
+            {"beer_number": "1", "untappd": "3.5", "julete": "4.0"},
+        )
+        assert response.status_code == 200
+        content = response.content.decode()
+        assert "Endringer er ikke lenger mulig" in content
+
+    def test_when_event_is_closed_and_no_line_it_should_return_403(
+        self, client, make_event
+    ):
         event = make_event(closed_at=timezone.now())
         scorecard = Scorecard.objects.create(event=event, judge_name="Morten")
         response = client.post(

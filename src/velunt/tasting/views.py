@@ -84,10 +84,29 @@ def save_score_line(request, public_id):
     )
     if request.method != "POST":
         return HttpResponseNotAllowed(["POST"])
+    scoring_system = get_scoring_system(scorecard.event.scoring_system)
+
     if scorecard.event.state != "open":
+        beer_number = request.POST.get("beer_number")
+        line = ScorecardLine.objects.filter(
+            scorecard=scorecard, beer_number=beer_number
+        ).first()
+        if line:
+            return render(
+                request,
+                "tasting/_score_line.html",
+                {
+                    "line": line,
+                    "scorecard": scorecard,
+                    "scoring_system": scoring_system,
+                    "readonly": True,
+                    "closed_message": (
+                        "Arrangementet er avsluttet. Endringer er ikke lenger mulig."
+                    ),
+                },
+            )
         return HttpResponse("Arrangementet er lukket.", status=403)
 
-    scoring_system = get_scoring_system(scorecard.event.scoring_system)
     beer_number = request.POST.get("beer_number")
     if not beer_number:
         return HttpResponse("Ølnummer mangler.", status=400)
