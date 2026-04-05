@@ -1,9 +1,9 @@
 <div class="score-line-row score-line-header">
+    <span class="score-line-controls"></span>
     <span class="score-line-beer">Øl</span>
     {% for dim in scoring_system.dimensions %}
         <span class="score-line-dim">{{ dim.label }}</span>
     {% endfor %}
-    <span class="score-line-controls"></span>
 </div>
 
 {% for line in lines %}

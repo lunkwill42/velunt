@@ -17,7 +17,7 @@
     /* Shared grid layout for header and score line rows */
     .score-line-row {
         display: grid;
-        grid-template-columns: 3rem repeat({{ scoring_system.dimensions|length }}, 1fr) 1.5rem;
+        grid-template-columns: 1.5rem 3rem repeat({{ scoring_system.dimensions|length }}, 1fr);
         gap: 0.5rem;
         align-items: center;
         padding: 0.4rem 0.5rem;
@@ -59,7 +59,6 @@
     .score-line-controls {
         display: flex;
         align-items: center;
-        justify-content: flex-end;
         gap: 0.25rem;
     }
     .score-line-chevron {
