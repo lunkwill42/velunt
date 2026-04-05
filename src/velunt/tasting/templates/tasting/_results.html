@@ -63,6 +63,9 @@
     .result-entry[open] .result-chevron {
         transform: rotate(45deg);
     }
+    .result-entry:nth-child(even) > summary {
+        background: var(--pico-table-row-stripped-background-color);
+    }
     .result-detail {
         border-left: 3px solid var(--pico-primary);
         padding-left: 0.75rem;
