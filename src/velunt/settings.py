@@ -96,6 +96,8 @@ DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
 SESSION_COOKIE_AGE = 90 * 24 * 60 * 60  # 90 days
 
+LOGIN_URL = "/admin/login/"
+
 EMAIL_BACKEND = os.environ.get(
     "DJANGO_EMAIL_BACKEND",
     "django.core.mail.backends.console.EmailBackend",
