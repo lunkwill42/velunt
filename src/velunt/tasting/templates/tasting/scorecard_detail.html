@@ -15,6 +15,39 @@
     header h1 {
         margin-top: 0;
     }
+    .copy-link-btn {
+        background: none;
+        border: none;
+        cursor: pointer;
+        padding: 0.1rem;
+        margin: 0 0 0 0.3rem;
+        width: auto;
+        vertical-align: middle;
+        color: var(--pico-muted-color);
+        transition: color 0.2s;
+    }
+    .copy-link-btn:hover {
+        color: var(--pico-primary);
+    }
+    .copy-link-btn.copied {
+        color: var(--pico-primary);
+    }
+    .copy-toast {
+        position: absolute;
+        background: var(--pico-primary);
+        color: var(--pico-primary-inverse);
+        padding: 0.25rem 0.5rem;
+        border-radius: 0.25rem;
+        font-size: 0.75rem;
+        white-space: nowrap;
+        animation: toast-fade 1.5s ease-out forwards;
+        pointer-events: none;
+    }
+    @keyframes toast-fade {
+        0%   { opacity: 1; transform: translateY(0); }
+        70%  { opacity: 1; transform: translateY(0); }
+        100% { opacity: 0; transform: translateY(-0.5rem); }
+    }
 
     /* Reduce gutters on small screens */
     @media (max-width: 576px) {
@@ -174,7 +207,21 @@
 <article>
     <header>
         <small class="muted-label">Dommerskjema</small>
-        <h1>{{ scorecard.judge_name }}</h1>
+        <h1>{{ scorecard.judge_name }}
+            <button class="copy-link-btn"
+                    title="Kopier lenke til dommerskjemaet"
+                    style="position: relative; display: inline-block;"
+                    onclick="
+                        navigator.clipboard.writeText('{{ request.build_absolute_uri }}');
+                        var t = document.createElement('span');
+                        t.className = 'copy-toast';
+                        t.textContent = 'Kopiert!';
+                        this.appendChild(t);
+                        t.addEventListener('animationend', function() { t.remove(); });
+                    ">
+                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>
+            </button>
+        </h1>
         <p>
             <a href="{% url 'tasting:event_detail' scorecard.event.public_id %}">
                 {{ scorecard.event.description }}
@@ -182,18 +229,6 @@
             — {{ scorecard.event.event_date|date:"j. F Y" }}
         </p>
     </header>
-
-    <section>
-        <details>
-            <summary>Lenke til dette dommerskjemaet</summary>
-            <p>
-                <code id="scorecard-url">{{ request.build_absolute_uri }}</code>
-                <button onclick="navigator.clipboard.writeText(document.getElementById('scorecard-url').textContent)">
-                    Kopier lenke
-                </button>
-            </p>
-        </details>
-    </section>
 
     {% if scorecard.event.state == "open" %}
         <div id="score-lines">
