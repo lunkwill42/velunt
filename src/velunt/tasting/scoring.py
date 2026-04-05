@@ -87,15 +87,15 @@ JULEOL = JuleolScoringSystem(
     name="Juleøl",
     dimensions=[
         Dimension(
-            key="untappd",
-            label="Untappd",
+            key="julete",
+            label="«Julete»",
             min_value=Decimal("1.0"),
             max_value=Decimal("5.0"),
             increment=Decimal("0.25"),
         ),
         Dimension(
-            key="julete",
-            label="Julete",
+            key="untappd",
+            label="«Untappd»",
             min_value=Decimal("1.0"),
             max_value=Decimal("5.0"),
             increment=Decimal("0.25"),

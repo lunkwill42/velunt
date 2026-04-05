@@ -179,12 +179,12 @@ The Django admin should provide an action to **recalculate all total scores** fo
 ### Built-in systems
 
 #### Juleøl (Christmas beer)
-| Dimension | Label    | Min | Max | Increment | Type  |
-|-----------|----------|-----|-----|-----------|-------|
-| untappd   | Untappd  | 1.0 | 5.0 | 0.25      | Float |
-| julete    | Julete   | 1.0 | 5.0 | 0.25      | Float |
+| Dimension | Label      | Min | Max | Increment | Type  |
+|-----------|------------|-----|-----|-----------|-------|
+| julete    | «Julete»   | 1.0 | 5.0 | 0.25      | Float |
+| untappd   | «Untappd»  | 1.0 | 5.0 | 0.25      | Float |
 
-**Total score** = untappd × julete (range: 1.0–25.0)
+**Total score** = «Julete» × «Untappd» (range: 1.0–25.0)
 
 #### Simple Untappd
 | Dimension | Label   | Min | Max | Increment | Type  |
