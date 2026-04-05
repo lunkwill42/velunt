@@ -1,17 +1,24 @@
 {% load tasting_tags %}
 <details id="line-{{ line.beer_number }}" class="score-line" {% if keep_open or line.total_score is None and not readonly %}open{% endif %}>
-    <summary class="score-line-row score-line-summary">
-        <span class="score-line-controls">
-            <span class="score-line-chevron"></span>
-        </span>
-        <span class="score-line-beer">#{{ line.beer_number }}</span>
-        <span id="line-summary-{{ line.beer_number }}" class="score-line-dims">
-            {% for dim in scoring_system.dimensions %}
-                {% with val=line.scores|dictget:dim.key %}
-                <span class="score-line-dim">{% if val is not None %}{{ val }}{% else %}–{% endif %}</span>
-                {% endwith %}
-            {% endfor %}
-        </span>
+    <summary class="score-line-summary">
+        <div class="score-line-row">
+            <span class="score-line-controls">
+                <span class="score-line-chevron"></span>
+            </span>
+            <span class="score-line-beer">#{{ line.beer_number }}</span>
+            <span id="line-summary-{{ line.beer_number }}" class="score-line-dims">
+                {% for dim in scoring_system.dimensions %}
+                    {% with val=line.scores|dictget:dim.key %}
+                    <span class="score-line-dim">{% if val is not None %}{{ val }}{% else %}–{% endif %}</span>
+                    {% endwith %}
+                {% endfor %}
+            </span>
+        </div>
+        {% with name=beer_names|dictget:line.beer_number %}
+        {% if name %}
+            <div class="score-line-beer-name">{{ name }}</div>
+        {% endif %}
+        {% endwith %}
     </summary>
 
     <div class="score-line-expanded">

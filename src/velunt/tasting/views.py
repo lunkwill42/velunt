@@ -108,6 +108,7 @@ def scorecard_detail(request, public_id):
     scoring_system = get_scoring_system(scorecard.event.scoring_system)
     lines = scorecard.lines.all()
     next_beer_number = _next_beer_number(lines)
+    beer_names = _get_beer_names(scorecard.event)
 
     return render(
         request,
@@ -117,6 +118,7 @@ def scorecard_detail(request, public_id):
             "scoring_system": scoring_system,
             "lines": lines,
             "next_beer_number": next_beer_number,
+            "beer_names": beer_names,
         },
     )
 
@@ -297,6 +299,17 @@ def _next_beer_number(lines):
     if not lines:
         return 1
     return max(line.beer_number for line in lines) + 1
+
+
+def _get_beer_names(event):
+    """Build a dict of beer_number → beer name from the published answer key."""
+    try:
+        ak = event.answer_key
+    except event.__class__.answer_key.RelatedObjectDoesNotExist:
+        return {}
+    if not ak.is_published:
+        return {}
+    return {e.beer_number: e.beer.name for e in ak.entries.select_related("beer").all()}
 
 
 def _get_all_session_scorecard_ids(request):
