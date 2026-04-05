@@ -17,7 +17,7 @@ from velunt.tasting.models import (
 class BeerInline(admin.TabularInline):
     model = Beer
     extra = 1
-    fields = ["name"]
+    fields = ["name", "is_homebrew"]
     show_change_link = True
 
 
@@ -152,8 +152,8 @@ class AnswerKeyAdmin(admin.ModelAdmin):
 
 @admin.register(Beer)
 class BeerAdmin(admin.ModelAdmin):
-    list_display = ["name", "event"]
-    list_filter = ["event"]
+    list_display = ["name", "event", "is_homebrew"]
+    list_filter = ["event", "is_homebrew"]
     search_fields = ["name"]
     inlines = [BeerLinkInline]
 

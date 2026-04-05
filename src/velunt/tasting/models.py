@@ -121,6 +121,7 @@ class Beer(models.Model):
         related_name="beers",
     )
     name = models.CharField(max_length=200)
+    is_homebrew = models.BooleanField(default=False)
 
     class Meta:
         ordering = ["name"]
