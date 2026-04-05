@@ -319,11 +319,11 @@ Follow the conventions from NAV's contributor checklist (based on https://cbea.m
 
 ### Post-MVP (Priority 2)
 
-- Fasit upload via CSV or Excel spreadsheet.
-- Multiple URLs per fasit entry (with labels: Vinmonopolet, Untappd, Brewfather, etc.).
+- Bulk beer import: a textarea in the admin where organizers can paste tab-separated lines from a spreadsheet (beer name per line, optionally with URL columns) to bulk-create Beer objects for an event.
 - Judge statistics: most/least generous scorer, average scores.
-- Control beer variance analysis (same beer served twice under different numbers).
-- Custom organizer pages (outside Django admin) for managing events and fasit.
-- Secret URL for fasit entry (so a non-admin can enter it).
+- Control beer variance analysis (how consistent each judge's scores were across duplicate servings of the same beer).
+- Custom organizer pages (outside Django admin) for managing events and answer key.
+- Secret URL for answer key entry (so a non-admin can enter it).
 - Email/copy scorecard URL to judge.
+- Homebrew filter toggle on the results page (show only homebrews).
 - English translation.
