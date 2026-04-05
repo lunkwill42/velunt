@@ -1,3 +1,4 @@
+from django.db.models import Max, Min
 from django.http import HttpResponse, HttpResponseNotAllowed
 from django.shortcuts import get_object_or_404, redirect, render
 
@@ -14,6 +15,7 @@ def event_detail(request, public_id):
 
     existing_scorecard = _get_session_scorecard(request, event)
     form = ScorecardForm(event=event) if event.state == "open" else None
+    event_stats = _get_event_stats(event) if event.state == "closed" else None
 
     return render(
         request,
@@ -23,6 +25,7 @@ def event_detail(request, public_id):
             "qr_svg": qr_svg,
             "existing_scorecard": existing_scorecard,
             "form": form,
+            "event_stats": event_stats,
         },
     )
 
@@ -252,3 +255,18 @@ def _next_beer_number(lines):
     if not lines:
         return 1
     return max(line.beer_number for line in lines) + 1
+
+
+def _get_event_stats(event):
+    """Compute summary statistics for a closed event."""
+    lines = ScorecardLine.objects.filter(scorecard__event=event)
+    timestamps = lines.aggregate(
+        first_score_at=Min("created_at"),
+        last_score_at=Max("updated_at"),
+    )
+    return {
+        "scorecard_count": event.scorecards.count(),
+        "beer_count": lines.values("beer_number").distinct().count(),
+        "first_score_at": timestamps["first_score_at"],
+        "last_score_at": timestamps["last_score_at"],
+    }

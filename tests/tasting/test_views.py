@@ -62,6 +62,24 @@ class TestEventDetailView:
         content = response.content.decode()
         assert "Avsluttet" in content
 
+    def test_when_event_is_closed_it_should_show_stats(self, client, make_event):
+        event = make_event(closed_at=timezone.now())
+        scorecard = Scorecard.objects.create(event=event, judge_name="Morten")
+        ScorecardLine.objects.create(
+            scorecard=scorecard,
+            beer_number=1,
+            scores={"untappd": "3.5", "julete": "4.0"},
+        )
+        ScorecardLine.objects.create(
+            scorecard=scorecard, beer_number=2, scores={"untappd": "2.0"}
+        )
+        response = client.get(f"/event/{event.public_id}/")
+        content = response.content.decode()
+        assert "1" in content  # 1 scorecard
+        assert "2" in content  # 2 beers
+        assert "Dommerskjema levert" in content
+        assert "Øl bedømt" in content
+
     def test_when_event_page_rendered_it_should_contain_qr_svg(
         self, client, make_event
     ):
