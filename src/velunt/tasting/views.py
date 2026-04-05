@@ -100,6 +100,7 @@ def save_score_line(request, public_id):
                     "scorecard": scorecard,
                     "scoring_system": scoring_system,
                     "readonly": True,
+                    "keep_open": True,
                     "closed_message": (
                         "Arrangementet er avsluttet. Endringer er ikke lenger mulig."
                     ),
