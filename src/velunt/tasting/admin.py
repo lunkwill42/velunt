@@ -1,3 +1,4 @@
+from django import forms
 from django.contrib import admin
 from django.urls import reverse
 from django.utils.html import format_html
@@ -20,8 +21,21 @@ class BeerInline(admin.TabularInline):
     show_change_link = True
 
 
+class BeerLinkForm(forms.ModelForm):
+    class Meta:
+        model = BeerLink
+        fields = ["label", "url"]
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        from velunt.tasting.widgets import BeerLinkLabelInput
+
+        self.fields["label"].widget = BeerLinkLabelInput()
+
+
 class BeerLinkInline(admin.TabularInline):
     model = BeerLink
+    form = BeerLinkForm
     extra = 1
     fields = ["label", "url"]
 
