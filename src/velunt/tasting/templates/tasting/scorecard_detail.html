@@ -263,11 +263,7 @@
             </button>
         </h1>
         <div style="display: flex; align-items: center; gap: 0.75rem;">
-            <div class="event-calendar" role="img" aria-label="{{ scorecard.event.event_date|date:'j. F Y' }}">
-                <div class="event-calendar-month" aria-hidden="true">{{ scorecard.event.event_date|date:"M" }}</div>
-                <div class="event-calendar-day" aria-hidden="true">{{ scorecard.event.event_date|date:"j" }}</div>
-                <div class="event-calendar-year" aria-hidden="true">{{ scorecard.event.event_date|date:"Y" }}</div>
-            </div>
+            {% include "tasting/_calendar_icon.html" with date=scorecard.event.event_date %}
             <a href="{% url 'tasting:event_detail' scorecard.event.public_id %}">
                 {{ scorecard.event.description }}
             </a>
