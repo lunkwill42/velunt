@@ -8,6 +8,16 @@ from velunt.tasting.qr import generate_qr_svg
 from velunt.tasting.scoring import get_scoring_system
 
 
+def landing(request):
+    """Landing page with site title and event list."""
+    scorecard_ids = _get_all_session_scorecard_ids(request)
+    scorecards = Scorecard.objects.filter(public_id__in=scorecard_ids).select_related(
+        "event"
+    )
+    events = [sc.event for sc in scorecards]
+    return render(request, "tasting/landing.html", {"events": events})
+
+
 def event_list(request):
     """List events the current session has scorecards for."""
     scorecard_ids = _get_all_session_scorecard_ids(request)

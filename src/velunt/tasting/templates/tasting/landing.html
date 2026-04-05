@@ -1,0 +1,17 @@
+{% extends "base.html" %}
+
+{% block title %}Velunt{% endblock %}
+
+{% block content %}
+<header>
+    <h1>Velunt</h1>
+    <blockquote>
+        Drik, venner kjære, mitt øl velunt skal være
+    </blockquote>
+</header>
+
+<section>
+    <h2>Mine arrangementer</h2>
+    {% include "tasting/_event_list.html" %}
+</section>
+{% endblock %}

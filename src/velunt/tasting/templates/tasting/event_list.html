@@ -8,18 +8,6 @@
         <h1>Mine arrangementer</h1>
     </header>
 
-    {% if events %}
-        {% for event in events %}
-        <a href="{% url 'tasting:event_detail' event.public_id %}">
-            <article>
-                <strong>{{ event.description }}</strong>
-                <br>
-                <small>{{ event.event_date|date:"j. F Y" }} — {% if event.state == "not_yet_open" %}Ikke startet{% elif event.state == "open" %}Åpent{% elif event.state == "closed" %}Avsluttet{% endif %}</small>
-            </article>
-        </a>
-        {% endfor %}
-    {% else %}
-        <p>Du har ikke registrert deg for noen arrangementer ennå.</p>
-    {% endif %}
+    {% include "tasting/_event_list.html" %}
 </article>
 {% endblock %}
