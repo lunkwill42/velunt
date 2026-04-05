@@ -190,7 +190,7 @@
 
     {% elif scorecard.event.state == "closed" %}
         <section>
-            <p>Arrangementet er avsluttet. Dommerskjemaet er nå skrivebeskyttet.</p>
+            <p><mark>Arrangementet er avsluttet. Dommerskjemaet er nå skrivebeskyttet.</mark></p>
             {% for line in lines %}
                 {% include "tasting/_score_line.html" with line=line scorecard=scorecard scoring_system=scoring_system readonly=True %}
             {% endfor %}
