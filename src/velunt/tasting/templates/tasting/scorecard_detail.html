@@ -1,9 +1,21 @@
 {% extends "base.html" %}
 
-{% block title %}Dommerskjema — {{ scorecard.judge_name }} — Velunt{% endblock %}
+{% block title %}{{ scorecard.judge_name }} — {{ scorecard.event.description }} — Velunt{% endblock %}
 
 {% block extra_head %}
 <style>
+    .muted-label {
+        display: block;
+        color: var(--pico-muted-color);
+        font-size: 0.85rem;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        margin-bottom: 0;
+    }
+    header h1 {
+        margin-top: 0;
+    }
+
     /* Reduce gutters on small screens */
     @media (max-width: 576px) {
         .container { padding-inline: 0.5rem; }
@@ -161,7 +173,8 @@
 {% block content %}
 <article>
     <header>
-        <h1>Dommerskjema: {{ scorecard.judge_name }}</h1>
+        <small class="muted-label">Dommerskjema</small>
+        <h1>{{ scorecard.judge_name }}</h1>
         <p>
             <a href="{% url 'tasting:event_detail' scorecard.event.public_id %}">
                 {{ scorecard.event.description }}
