@@ -1,0 +1,218 @@
+{% load tasting_tags %}
+
+<style>
+    .result-entry {
+        margin-bottom: 0.25rem;
+    }
+    .result-entry > summary {
+        list-style: none;
+    }
+    .result-entry > summary::marker,
+    .result-entry > summary::-webkit-details-marker {
+        display: none;
+    }
+    .result-entry > summary::after {
+        display: none;
+    }
+    .result-entry[open] > summary {
+        margin-bottom: 0;
+    }
+    .result-row,
+    .result-header {
+        display: grid;
+        grid-template-columns: 2.5rem 2.5rem 1fr 4rem;
+        gap: 0.5rem;
+        align-items: center;
+        padding: 0.4rem 0.5rem;
+    }
+    .result-header {
+        font-size: 0.8rem;
+        font-weight: 600;
+        color: var(--pico-muted-color);
+        border-bottom: 1px solid var(--pico-muted-border-color);
+        margin-bottom: 0.25rem;
+    }
+    .result-row {
+        cursor: pointer;
+        font-variant-numeric: tabular-nums;
+    }
+    .result-rank {
+        text-align: center;
+    }
+    .result-beer-number {
+        text-align: center;
+        color: var(--pico-muted-color);
+        font-size: 0.85rem;
+    }
+    .result-score {
+        text-align: right;
+        font-weight: 600;
+        font-variant-numeric: tabular-nums;
+    }
+    .result-chevron {
+        display: inline-block;
+        width: 0.4rem;
+        height: 0.4rem;
+        border-right: 1.5px solid var(--pico-muted-color);
+        border-bottom: 1.5px solid var(--pico-muted-color);
+        transform: rotate(-45deg);
+        transition: transform 0.2s;
+        margin-right: 0.2rem;
+        vertical-align: middle;
+    }
+    .result-entry[open] .result-chevron {
+        transform: rotate(45deg);
+    }
+    .result-detail {
+        border-left: 3px solid var(--pico-primary);
+        padding-left: 0.75rem;
+        margin-bottom: 0.5rem;
+    }
+    .result-judges-table {
+        font-size: 0.85rem;
+        margin-top: 0.5rem;
+    }
+    .result-judges-table th,
+    .result-judges-table td {
+        padding: 0.25rem 0.5rem;
+        text-align: center;
+    }
+    .result-judges-table th:first-child,
+    .result-judges-table td:first-child {
+        text-align: left;
+    }
+    .badge-homebrew {
+        display: inline-block;
+        background: var(--pico-ins-color, #2e7d32);
+        color: #fff;
+        font-size: 0.65rem;
+        font-weight: 600;
+        padding: 0.1rem 0.4rem;
+        border-radius: 1rem;
+        vertical-align: middle;
+        margin-left: 0.3rem;
+    }
+    .incomplete-score,
+    .missing-score {
+        opacity: 0.5;
+    }
+    .incomplete-score em,
+    .missing-score em {
+        color: var(--pico-del-color, #c62828);
+    }
+    .beer-links {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.4rem;
+        margin-bottom: 0.5rem;
+    }
+    .beer-link-pill {
+        display: inline-block;
+        padding: 0.15rem 0.5rem;
+        border-radius: 1rem;
+        font-size: 0.75rem;
+        font-weight: 600;
+        background: var(--pico-secondary-background);
+        color: var(--pico-secondary-inverse);
+        text-decoration: none;
+    }
+    .beer-link-pill:hover {
+        background: var(--pico-secondary-hover-background);
+    }
+    /* Duplicate group colors */
+    .duplicate-group-0 > summary { border-left: 4px solid #f6b26b; }
+    .duplicate-group-1 > summary { border-left: 4px solid #ead1dc; }
+    .duplicate-group-2 > summary { border-left: 4px solid #a4c2f4; }
+    .duplicate-group-3 > summary { border-left: 4px solid #b6d7a8; }
+    .duplicate-group-4 > summary { border-left: 4px solid #d5a6bd; }
+</style>
+
+<h2>Resultater</h2>
+
+<div class="result-header">
+    <span>Plass</span>
+    <span>Øl #</span>
+    <span>Navn</span>
+    <span style="text-align: right;">Poeng</span>
+</div>
+
+<div class="results-list">
+    {% for beer in results.ranked_beers %}
+    <details class="result-entry{% if beer.is_duplicate %} duplicate-group-{{ beer.duplicate_group_id }}{% endif %}">
+        <summary class="result-row">
+            <span class="result-rank"><span class="result-chevron"></span>{{ beer.rank }}</span>
+            <span class="result-beer-number">{{ beer.beer_number }}</span>
+            <span class="result-name">
+                {{ beer.beer_name }}
+                {% if beer.beer and beer.beer.is_homebrew %}
+                    <span class="badge-homebrew">Hjemmebrygg</span>
+                {% endif %}
+            </span>
+            <span class="result-score">{{ beer.avg_score|floatformat:2 }}</span>
+        </summary>
+
+        <div class="result-detail">
+            <p>
+                {% if beer.is_duplicate %}
+                    <small>Duplikat av øl #{% for s in beer.duplicate_siblings %}{{ s }}{% if not forloop.last %}, #{% endif %}{% endfor %}</small>
+                {% endif %}
+                {% if beer.judge_count < beer.total_judges %}
+                    {% if beer.is_duplicate %}<br>{% endif %}<small><em>Gyldige poeng fra {{ beer.judge_count }} av {{ beer.total_judges }} dommere</em></small>
+                {% endif %}
+            </p>
+
+            <div class="beer-links">
+                {% if beer.beer %}
+                    {% for link in beer.beer.links.all %}
+                        <a href="{{ link.url }}" class="beer-link-pill" target="_blank" rel="noopener">{{ link.label }}</a>
+                    {% endfor %}
+                    {% if not beer.beer|has_link_label:"Untappd" %}
+                        <a href="https://untappd.com/search?q={{ beer.beer_name|urlencode_value }}" class="beer-link-pill" target="_blank" rel="noopener">Untappd</a>
+                    {% endif %}
+                {% endif %}
+            </div>
+
+            <table class="result-judges-table">
+                <thead>
+                    <tr>
+                        <th>Dommer</th>
+                        {% for dim in results.scoring_system.dimensions %}
+                            <th>{{ dim.label }}</th>
+                        {% endfor %}
+                        <th>Total</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for je in beer.judge_entries %}
+                    {% if je.line %}
+                    <tr{% if je.line.total_score is None %} class="incomplete-score"{% endif %}>
+                        <td>{{ je.judge_name }}</td>
+                        {% for dim in results.scoring_system.dimensions %}
+                            {% with val=je.line.scores|dictget:dim.key %}
+                            <td>{% if val is not None %}{{ val }}{% else %}<em>–</em>{% endif %}</td>
+                            {% endwith %}
+                        {% endfor %}
+                        <td>
+                            {% if je.line.total_score is not None %}
+                                <strong>{{ je.line.total_score }}</strong>
+                            {% else %}
+                                <em title="Ufullstendig poenggivning">✗</em>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% else %}
+                    <tr class="missing-score">
+                        <td>{{ je.judge_name }}</td>
+                        {% for dim in results.scoring_system.dimensions %}
+                            <td><em>–</em></td>
+                        {% endfor %}
+                        <td><em title="Ingen poenggivning">✗</em></td>
+                    </tr>
+                    {% endif %}
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </details>
+    {% endfor %}
+</div>

@@ -1,3 +1,5 @@
+from urllib.parse import quote
+
 from django import template
 
 register = template.Library()
@@ -23,3 +25,15 @@ def numformat(value):
 def dim_integer_steps(dim):
     """Return the number of integer intervals in a dimension's range."""
     return int(dim.max_value - dim.min_value)
+
+
+@register.filter
+def urlencode_value(value):
+    """URL-encode a string for use in query parameters."""
+    return quote(str(value))
+
+
+@register.filter
+def has_link_label(beer, label):
+    """Check if a beer has a BeerLink with the given label (case-insensitive)."""
+    return beer.links.filter(label__iexact=label).exists()
