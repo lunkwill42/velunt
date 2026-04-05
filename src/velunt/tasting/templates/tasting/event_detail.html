@@ -2,6 +2,34 @@
 
 {% block title %}{{ event.description }} — Velunt{% endblock %}
 
+{% block extra_head %}
+<style>
+    .qr-thumb {
+        margin-left: auto;
+        width: 3rem;
+        height: 3rem;
+        cursor: pointer;
+        opacity: 0.7;
+        transition: opacity 0.2s;
+    }
+    .qr-thumb:hover {
+        opacity: 1;
+    }
+    .qr-thumb svg {
+        width: 100%;
+        height: 100%;
+    }
+    .qr-modal-content {
+        max-width: 20rem;
+        margin: auto;
+    }
+    .qr-modal-svg svg {
+        width: 100%;
+        height: auto;
+    }
+</style>
+{% endblock %}
+
 {% block content %}
 <article>
     <header>
@@ -19,12 +47,23 @@
             {% elif event.state == "closed" %}
                 <span class="event-status-pill event-status-closed">Avsluttet</span>
             {% endif %}
+            <div class="qr-thumb" onclick="document.getElementById('qr-modal').showModal()" title="Vis QR-kode">
+                {{ qr_svg|safe }}
+            </div>
         </div>
     </header>
 
-    <section>
-        {{ qr_svg|safe }}
-    </section>
+    <dialog id="qr-modal" onclick="if(event.target===this)this.close()">
+        <article class="qr-modal-content">
+            <header>
+                <button aria-label="Lukk" rel="prev" onclick="document.getElementById('qr-modal').close()"></button>
+                <p>Skann QR-koden for å åpne arrangementet</p>
+            </header>
+            <div class="qr-modal-svg">
+                {{ qr_svg|safe }}
+            </div>
+        </article>
+    </dialog>
 
     {% if event.state == "open" %}
         <section>
