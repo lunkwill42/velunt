@@ -7,7 +7,7 @@ class ScorecardForm(forms.Form):
     judge_name = forms.CharField(
         max_length=100,
         label="Ditt navn",
-        widget=forms.TextInput(attrs={"placeholder": "F.eks. Morten B"}),
+        widget=forms.TextInput(attrs={"placeholder": "F.eks. Ola Nordmann"}),
     )
 
     def __init__(self, *args, event=None, **kwargs):
@@ -22,6 +22,6 @@ class ScorecardForm(forms.Form):
             raise forms.ValidationError(
                 "Dette navnet er allerede i bruk for dette arrangementet. "
                 "Legg til noe ekstra for å skille deg ut, "
-                'f.eks. "Morten B" eller "Morten (Bergen)".'
+                'f.eks. "Ola N" eller "Ola (Bergen)".'
             )
         return name
