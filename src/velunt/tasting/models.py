@@ -112,3 +112,68 @@ class ScorecardLine(models.Model):
         """Compute and store total_score from the scoring system."""
         scoring_system = get_scoring_system(self.scorecard.event.scoring_system)
         self.total_score = scoring_system.calculate_total(self.scores)
+
+
+class Beer(models.Model):
+    event = models.ForeignKey(
+        Event,
+        on_delete=models.CASCADE,
+        related_name="beers",
+    )
+    name = models.CharField(max_length=200)
+    links = models.JSONField(default=list, blank=True)
+
+    class Meta:
+        ordering = ["name"]
+
+    def __str__(self):
+        return self.name
+
+
+class AnswerKey(models.Model):
+    event = models.OneToOneField(
+        Event,
+        on_delete=models.CASCADE,
+        related_name="answer_key",
+    )
+    created_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+    )
+    created_at = models.DateTimeField(auto_now_add=True)
+    published_at = models.DateTimeField(null=True, blank=True)
+
+    def __str__(self):
+        return f"Fasit: {self.event}"
+
+    @property
+    def is_published(self):
+        if self.published_at is None:
+            return False
+        return timezone.now() >= self.published_at
+
+
+class AnswerKeyEntry(models.Model):
+    answer_key = models.ForeignKey(
+        AnswerKey,
+        on_delete=models.CASCADE,
+        related_name="entries",
+    )
+    beer_number = models.PositiveIntegerField()
+    beer = models.ForeignKey(
+        Beer,
+        on_delete=models.CASCADE,
+        related_name="answer_key_entries",
+    )
+
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(
+                fields=["answer_key", "beer_number"],
+                name="unique_beer_number_per_answer_key",
+            ),
+        ]
+        ordering = ["beer_number"]
+
+    def __str__(self):
+        return f"#{self.beer_number}: {self.beer.name}"
