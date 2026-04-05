@@ -5,7 +5,14 @@ import pytest
 from django.db import IntegrityError
 from django.utils import timezone
 
-from velunt.tasting.models import Event, Scorecard, ScorecardLine
+from velunt.tasting.models import (
+    AnswerKey,
+    AnswerKeyEntry,
+    Beer,
+    Event,
+    Scorecard,
+    ScorecardLine,
+)
 
 
 @pytest.fixture()
@@ -152,3 +159,59 @@ class TestScorecardLine:
     def test_when_converted_to_string_it_should_show_beer_number(self, scorecard):
         line = ScorecardLine(scorecard=scorecard, beer_number=3)
         assert str(line) == "Øl #3"
+
+
+class TestBeer:
+    def test_when_converted_to_string_it_should_return_name(self, make_event):
+        event = make_event()
+        beer = Beer.objects.create(event=event, name="Nøgne Ø Julefest")
+        assert str(beer) == "Nøgne Ø Julefest"
+
+
+class TestAnswerKey:
+    @pytest.fixture()
+    def answer_key(self, make_event, user):
+        event = make_event()
+        return AnswerKey.objects.create(event=event, created_by=user)
+
+    def test_when_published_at_is_null_is_published_should_be_false(self, answer_key):
+        assert answer_key.is_published is False
+
+    def test_when_published_at_is_in_past_is_published_should_be_true(self, answer_key):
+        answer_key.published_at = timezone.now() - datetime.timedelta(hours=1)
+        answer_key.save()
+        assert answer_key.is_published is True
+
+    def test_when_published_at_is_in_future_is_published_should_be_false(
+        self, answer_key
+    ):
+        answer_key.published_at = timezone.now() + datetime.timedelta(hours=1)
+        answer_key.save()
+        assert answer_key.is_published is False
+
+
+class TestAnswerKeyEntry:
+    def test_when_same_beer_number_twice_it_should_raise(self, make_event, user):
+        event = make_event()
+        ak = AnswerKey.objects.create(event=event, created_by=user)
+        beer = Beer.objects.create(event=event, name="Testøl")
+        AnswerKeyEntry.objects.create(answer_key=ak, beer_number=1, beer=beer)
+        with pytest.raises(IntegrityError):
+            AnswerKeyEntry.objects.create(answer_key=ak, beer_number=1, beer=beer)
+
+    def test_when_same_beer_different_numbers_it_should_succeed(self, make_event, user):
+        event = make_event()
+        ak = AnswerKey.objects.create(event=event, created_by=user)
+        beer = Beer.objects.create(event=event, name="Kontrolløl")
+        AnswerKeyEntry.objects.create(answer_key=ak, beer_number=1, beer=beer)
+        entry2 = AnswerKeyEntry.objects.create(answer_key=ak, beer_number=5, beer=beer)
+        assert entry2.pk is not None
+
+    def test_when_converted_to_string_it_should_show_number_and_name(
+        self, make_event, user
+    ):
+        event = make_event()
+        ak = AnswerKey.objects.create(event=event, created_by=user)
+        beer = Beer.objects.create(event=event, name="Nøgne Ø Julefest")
+        entry = AnswerKeyEntry.objects.create(answer_key=ak, beer_number=3, beer=beer)
+        assert str(entry) == "#3: Nøgne Ø Julefest"
