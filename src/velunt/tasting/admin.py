@@ -8,6 +8,7 @@ from velunt.tasting.models import (
     Beer,
     Event,
     Scorecard,
+    ScorecardLine,
 )
 
 
@@ -52,6 +53,7 @@ class EventAdmin(admin.ModelAdmin):
         "owner",
         "created_at",
     ]
+    actions = ["recalculate_scores"]
     inlines = [BeerInline, ScorecardInline]
 
     @admin.display(description="Status")
@@ -88,6 +90,18 @@ class EventAdmin(admin.ModelAdmin):
         if not change:
             obj.owner = request.user
         super().save_model(request, obj, form, change)
+
+    @admin.action(description="Beregn poeng på nytt")
+    def recalculate_scores(self, request, queryset):
+        count = 0
+        for event in queryset:
+            lines = ScorecardLine.objects.filter(scorecard__event=event).select_related(
+                "scorecard__event"
+            )
+            for line in lines:
+                line.save()
+                count += 1
+        self.message_user(request, f"{count} poenglinjer beregnet på nytt.")
 
 
 class AnswerKeyEntryInline(admin.TabularInline):
