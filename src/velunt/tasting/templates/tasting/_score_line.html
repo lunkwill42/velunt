@@ -43,8 +43,8 @@
 
             {% for dim in scoring_system.dimensions %}
                 {% with current=line.scores|dictget:dim.key %}
-                <label for="dim-{{ line.beer_number }}-{{ dim.key }}">
-                    {{ dim.label }}
+                <label for="dim-{{ line.beer_number }}-{{ dim.key }}" class="dim-label">
+                    <span class="dim-balloon">{{ dim.label }}</span>
                     <output id="val-{{ line.beer_number }}-{{ dim.key }}">{% if current is not None %}{{ current }}{% else %}–{% endif %}</output>
                 </label>
                 <input type="range"
