@@ -190,6 +190,13 @@
     {% elif scorecard.event.state == "closed" %}
         <section>
             <p><mark>Arrangementet er avsluttet. Dommerskjemaet er nå skrivebeskyttet.</mark></p>
+            <div class="score-line-row score-line-header">
+                <span class="score-line-controls"></span>
+                <span class="score-line-beer">Øl</span>
+                {% for dim in scoring_system.dimensions %}
+                    <span class="score-line-dim">{{ dim.label }}</span>
+                {% endfor %}
+            </div>
             {% for line in lines %}
                 {% include "tasting/_score_line.html" with line=line scorecard=scorecard scoring_system=scoring_system readonly=True %}
             {% endfor %}
