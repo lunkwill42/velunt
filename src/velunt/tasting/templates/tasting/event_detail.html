@@ -78,7 +78,11 @@
                 </dl>
             </article>
             {% endif %}
-            <p>Resultater kommer snart.</p>
+            {% if results %}
+                {% include "tasting/_results.html" %}
+            {% else %}
+                <p>Resultater kommer snart.</p>
+            {% endif %}
         </section>
     {% endif %}
 </article>

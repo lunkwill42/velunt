@@ -5,6 +5,7 @@ from django.shortcuts import get_object_or_404, redirect, render
 from velunt.tasting.forms import ScorecardForm
 from velunt.tasting.models import Event, Scorecard, ScorecardLine
 from velunt.tasting.qr import generate_qr_svg
+from velunt.tasting.results import compute_results
 from velunt.tasting.scoring import get_scoring_system
 
 
@@ -47,6 +48,14 @@ def event_detail(request, public_id):
     existing_scorecard = _get_session_scorecard(request, event)
     form = ScorecardForm(event=event) if event.state == "open" else None
     event_stats = _get_event_stats(event) if event.state == "closed" else None
+    results = None
+    if event.state == "closed":
+        try:
+            ak = event.answer_key
+            if ak.is_published:
+                results = compute_results(event)
+        except event.__class__.answer_key.RelatedObjectDoesNotExist:
+            pass
 
     return render(
         request,
@@ -57,6 +66,7 @@ def event_detail(request, public_id):
             "existing_scorecard": existing_scorecard,
             "form": form,
             "event_stats": event_stats,
+            "results": results,
         },
     )
 
