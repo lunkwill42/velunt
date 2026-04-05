@@ -1,0 +1,25 @@
+{% extends "base.html" %}
+
+{% block title %}Mine dommerskjema — Velunt{% endblock %}
+
+{% block content %}
+<article>
+    <header>
+        <h1>Mine dommerskjema</h1>
+    </header>
+
+    {% if scorecards %}
+        {% for scorecard in scorecards %}
+        <a href="{% url 'tasting:scorecard_detail' scorecard.public_id %}">
+            <article>
+                <strong>{{ scorecard.judge_name }}</strong>
+                <br>
+                <small>{{ scorecard.event.description }} — {{ scorecard.event.event_date|date:"j. F Y" }}</small>
+            </article>
+        </a>
+        {% endfor %}
+    {% else %}
+        <p>Du har ingen dommerskjema registrert ennå.</p>
+    {% endif %}
+</article>
+{% endblock %}

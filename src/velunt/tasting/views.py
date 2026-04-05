@@ -8,6 +8,27 @@ from velunt.tasting.qr import generate_qr_svg
 from velunt.tasting.scoring import get_scoring_system
 
 
+def event_list(request):
+    """List events the current session has scorecards for."""
+    scorecard_ids = _get_all_session_scorecard_ids(request)
+    scorecards = Scorecard.objects.filter(public_id__in=scorecard_ids).select_related(
+        "event"
+    )
+    events = [sc.event for sc in scorecards]
+    return render(request, "tasting/event_list.html", {"events": events})
+
+
+def scorecard_list(request):
+    """List scorecards tied to the current session."""
+    scorecard_ids = _get_all_session_scorecard_ids(request)
+    scorecards = (
+        Scorecard.objects.filter(public_id__in=scorecard_ids)
+        .select_related("event")
+        .order_by("-event__event_date")
+    )
+    return render(request, "tasting/scorecard_list.html", {"scorecards": scorecards})
+
+
 def event_detail(request, public_id):
     event = get_object_or_404(Event, public_id=public_id)
     event_url = request.build_absolute_uri()
@@ -255,6 +276,11 @@ def _next_beer_number(lines):
     if not lines:
         return 1
     return max(line.beer_number for line in lines) + 1
+
+
+def _get_all_session_scorecard_ids(request):
+    """Extract all scorecard public_ids stored in the session."""
+    return [v for k, v in request.session.items() if isinstance(v, str) and len(v) == 6]
 
 
 def _get_event_stats(event):

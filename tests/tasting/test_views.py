@@ -256,3 +256,39 @@ class TestSaveScoreLineView:
     def test_when_using_get_it_should_return_405(self, client, scorecard):
         response = client.get(f"/scorecard/{scorecard.public_id}/save-line/")
         assert response.status_code == 405
+
+
+class TestEventListView:
+    def test_when_no_session_data_it_should_show_empty_message(self, client, db):
+        response = client.get("/event/")
+        assert response.status_code == 200
+        content = response.content.decode()
+        assert "ikke registrert" in content
+
+    def test_when_session_has_events_it_should_list_them(self, client, make_event):
+        event = make_event(description="Juleølsmaking")
+        scorecard = Scorecard.objects.create(event=event, judge_name="Morten")
+        session = client.session
+        session[event.public_id] = scorecard.public_id
+        session.save()
+        response = client.get("/event/")
+        content = response.content.decode()
+        assert "Juleølsmaking" in content
+
+
+class TestScorecardListView:
+    def test_when_no_session_data_it_should_show_empty_message(self, client, db):
+        response = client.get("/scorecard/")
+        assert response.status_code == 200
+        content = response.content.decode()
+        assert "ingen dommerskjema" in content
+
+    def test_when_session_has_scorecards_it_should_list_them(self, client, make_event):
+        event = make_event()
+        scorecard = Scorecard.objects.create(event=event, judge_name="Morten")
+        session = client.session
+        session[event.public_id] = scorecard.public_id
+        session.save()
+        response = client.get("/scorecard/")
+        content = response.content.decode()
+        assert "Morten" in content
