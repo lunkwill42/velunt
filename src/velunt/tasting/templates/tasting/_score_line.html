@@ -59,7 +59,8 @@
                            this.classList.remove('unset');
                            document.getElementById('val-{{ line.beer_number }}-{{ dim.key }}').textContent = this.value;
                        ">
-                <small>{{ dim.min_value|numformat }}–{{ dim.max_value|numformat }}</small>
+                {% dim_integer_steps dim as steps %}
+                <div class="slider-ticks" style="--steps: {{ steps }};"></div>
                 {% endwith %}
             {% endfor %}
 

@@ -17,3 +17,9 @@ def numformat(value):
     if value is None:
         return ""
     return f"{float(value):g}"
+
+
+@register.simple_tag
+def dim_integer_steps(dim):
+    """Return the number of integer intervals in a dimension's range."""
+    return int(dim.max_value - dim.min_value)
