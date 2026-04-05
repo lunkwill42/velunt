@@ -121,13 +121,25 @@ class Beer(models.Model):
         related_name="beers",
     )
     name = models.CharField(max_length=200)
-    links = models.JSONField(default=list, blank=True)
 
     class Meta:
         ordering = ["name"]
 
     def __str__(self):
         return self.name
+
+
+class BeerLink(models.Model):
+    beer = models.ForeignKey(
+        Beer,
+        on_delete=models.CASCADE,
+        related_name="links",
+    )
+    label = models.CharField(max_length=100)
+    url = models.URLField()
+
+    def __str__(self):
+        return self.label
 
 
 class AnswerKey(models.Model):

@@ -6,6 +6,7 @@ from velunt.tasting.models import (
     AnswerKey,
     AnswerKeyEntry,
     Beer,
+    BeerLink,
     Event,
     Scorecard,
     ScorecardLine,
@@ -15,7 +16,14 @@ from velunt.tasting.models import (
 class BeerInline(admin.TabularInline):
     model = Beer
     extra = 1
-    fields = ["name", "links"]
+    fields = ["name"]
+    show_change_link = True
+
+
+class BeerLinkInline(admin.TabularInline):
+    model = BeerLink
+    extra = 1
+    fields = ["label", "url"]
 
 
 class ScorecardInline(admin.TabularInline):
@@ -133,6 +141,7 @@ class BeerAdmin(admin.ModelAdmin):
     list_display = ["name", "event"]
     list_filter = ["event"]
     search_fields = ["name"]
+    inlines = [BeerLinkInline]
 
 
 @admin.register(Scorecard)
