@@ -88,6 +88,7 @@ LANGUAGE_CODE = "nb"
 TIME_ZONE = "Europe/Oslo"
 USE_I18N = True
 USE_TZ = True
+LOCALE_PATHS = [BASE_DIR / "src" / "velunt" / "locale"]
 
 STATIC_URL = "static/"
 STATIC_ROOT = BASE_DIR / "staticfiles"
