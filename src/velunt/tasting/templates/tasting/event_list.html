@@ -14,7 +14,7 @@
             <article>
                 <strong>{{ event.description }}</strong>
                 <br>
-                <small>{{ event.event_date|date:"j. F Y" }} — {{ event.state }}</small>
+                <small>{{ event.event_date|date:"j. F Y" }} — {% if event.state == "not_yet_open" %}Ikke startet{% elif event.state == "open" %}Åpent{% elif event.state == "closed" %}Avsluttet{% endif %}</small>
             </article>
         </a>
         {% endfor %}
