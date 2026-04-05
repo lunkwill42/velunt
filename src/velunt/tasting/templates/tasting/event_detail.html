@@ -6,15 +6,20 @@
 <article>
     <header>
         <h1>{{ event.description }}</h1>
-        <p>{{ event.event_date|date:"j. F Y" }}</p>
-
-        {% if event.state == "not_yet_open" %}
-            <span class="event-status-pill event-status-not-yet-open">Ikke startet</span>
-        {% elif event.state == "open" %}
-            <span class="event-status-pill event-status-open">Åpent</span>
-        {% elif event.state == "closed" %}
-            <span class="event-status-pill event-status-closed">Avsluttet</span>
-        {% endif %}
+        <div style="display: flex; align-items: center; gap: 0.75rem;">
+            <div class="event-calendar" role="img" aria-label="{{ event.event_date|date:'j. F Y' }}">
+                <div class="event-calendar-month" aria-hidden="true">{{ event.event_date|date:"M" }}</div>
+                <div class="event-calendar-day" aria-hidden="true">{{ event.event_date|date:"j" }}</div>
+                <div class="event-calendar-year" aria-hidden="true">{{ event.event_date|date:"Y" }}</div>
+            </div>
+            {% if event.state == "not_yet_open" %}
+                <span class="event-status-pill event-status-not-yet-open">Ikke startet</span>
+            {% elif event.state == "open" %}
+                <span class="event-status-pill event-status-open">Åpent</span>
+            {% elif event.state == "closed" %}
+                <span class="event-status-pill event-status-closed">Avsluttet</span>
+            {% endif %}
+        </div>
     </header>
 
     <section>
