@@ -245,13 +245,15 @@ class TestSaveScoreLineView:
         )
         assert response.status_code == 403
 
-    def test_when_response_returned_it_should_be_html_partial(self, client, scorecard):
+    def test_when_response_returned_it_should_be_summary_partial(
+        self, client, scorecard
+    ):
         response = client.post(
             f"/scorecard/{scorecard.public_id}/save-line/",
             {"beer_number": "1"},
         )
         content = response.content.decode()
-        assert "#1" in content
+        assert "score-line-dim" in content
 
     def test_when_using_get_it_should_return_405(self, client, scorecard):
         response = client.get(f"/scorecard/{scorecard.public_id}/save-line/")

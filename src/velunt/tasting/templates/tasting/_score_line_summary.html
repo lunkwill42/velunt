@@ -1,0 +1,6 @@
+{% load tasting_tags %}
+{% for dim in scoring_system.dimensions %}
+    {% with val=line.scores|dictget:dim.key %}
+    <span class="score-line-dim">{% if val is not None %}{{ val }}{% else %}–{% endif %}</span>
+    {% endwith %}
+{% endfor %}

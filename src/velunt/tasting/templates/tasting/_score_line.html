@@ -5,11 +5,13 @@
             <span class="score-line-chevron"></span>
         </span>
         <span class="score-line-beer">#{{ line.beer_number }}</span>
-        {% for dim in scoring_system.dimensions %}
-            {% with val=line.scores|dictget:dim.key %}
-            <span class="score-line-dim">{% if val is not None %}{{ val }}{% else %}–{% endif %}</span>
-            {% endwith %}
-        {% endfor %}
+        <span id="line-summary-{{ line.beer_number }}" class="score-line-dims">
+            {% for dim in scoring_system.dimensions %}
+                {% with val=line.scores|dictget:dim.key %}
+                <span class="score-line-dim">{% if val is not None %}{{ val }}{% else %}–{% endif %}</span>
+                {% endwith %}
+            {% endfor %}
+        </span>
     </summary>
 
     <div class="score-line-expanded">
@@ -33,8 +35,8 @@
         </div>
         {% else %}
         <form hx-post="{% url 'tasting:save_score_line' scorecard.public_id %}"
-              hx-target="#line-{{ line.beer_number }}"
-              hx-swap="outerHTML"
+              hx-target="#line-summary-{{ line.beer_number }}"
+              hx-swap="innerHTML"
               hx-trigger="change">
             {% csrf_token %}
             <input type="hidden" name="beer_number" value="{{ line.beer_number }}">

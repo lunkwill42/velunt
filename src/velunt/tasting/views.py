@@ -116,7 +116,7 @@ def save_score_line(request, public_id):
             scorecard=scorecard, beer_number=beer_number
         ).first()
         if line:
-            return render(
+            response = render(
                 request,
                 "tasting/_score_line.html",
                 {
@@ -130,6 +130,9 @@ def save_score_line(request, public_id):
                     ),
                 },
             )
+            response["HX-Retarget"] = f"#line-{line.beer_number}"
+            response["HX-Reswap"] = "outerHTML"
+            return response
         return HttpResponse("Arrangementet er lukket.", status=403)
 
     beer_number = request.POST.get("beer_number")
@@ -157,12 +160,10 @@ def save_score_line(request, public_id):
 
     return render(
         request,
-        "tasting/_score_line.html",
+        "tasting/_score_line_summary.html",
         {
             "line": line,
-            "scorecard": scorecard,
             "scoring_system": scoring_system,
-            "keep_open": True,
         },
     )
 
