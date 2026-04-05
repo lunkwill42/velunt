@@ -7,6 +7,11 @@
     <title>{% block title %}Velunt{% endblock %}</title>
     <link rel="stylesheet" href="{% static 'vendor/pico.min.css' %}">
     <meta name="csrf-token" content="{{ csrf_token }}">
+    <style>
+        @media (max-width: 576px) {
+            .container { padding-inline: 0.5rem; }
+        }
+    </style>
     {% block extra_head %}{% endblock %}
 </head>
 <body>
