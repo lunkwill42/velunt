@@ -56,24 +56,27 @@
                 </p>
             {% endif %}
             {% if event_stats %}
-            <dl>
-                <dt>Dommerskjema levert</dt>
-                <dd>{{ event_stats.scorecard_count }}</dd>
-                <dt>Øl bedømt</dt>
-                <dd>{{ event_stats.beer_count }}</dd>
-                {% if event_stats.first_score_at %}
-                <dt>Første registrering</dt>
-                <dd>{{ event_stats.first_score_at|date:"j. N Y, H:i" }}</dd>
-                {% endif %}
-                {% if event_stats.last_score_at %}
-                <dt>Siste registrering</dt>
-                <dd>{{ event_stats.last_score_at|date:"j. N Y, H:i" }}</dd>
-                {% endif %}
-                {% if event.closed_at %}
-                <dt>Avsluttet</dt>
-                <dd>{{ event.closed_at|date:"j. N Y, H:i" }}</dd>
-                {% endif %}
-            </dl>
+            <article>
+                <header><strong>Oppsummering</strong></header>
+                <dl>
+                    <dt>Dommerskjema levert</dt>
+                    <dd>{{ event_stats.scorecard_count }}</dd>
+                    <dt>Øl bedømt</dt>
+                    <dd>{{ event_stats.beer_count }}</dd>
+                    {% if event_stats.first_score_at %}
+                    <dt>Første registrering</dt>
+                    <dd>{{ event_stats.first_score_at|date:"j. N Y, H:i" }}</dd>
+                    {% endif %}
+                    {% if event_stats.last_score_at %}
+                    <dt>Siste registrering</dt>
+                    <dd>{{ event_stats.last_score_at|date:"j. N Y, H:i" }}</dd>
+                    {% endif %}
+                    {% if event.closed_at %}
+                    <dt>Avsluttet</dt>
+                    <dd>{{ event.closed_at|date:"j. N Y, H:i" }}</dd>
+                    {% endif %}
+                </dl>
+            </article>
             {% endif %}
             <p>Resultater kommer snart.</p>
         </section>
