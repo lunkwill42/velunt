@@ -2,7 +2,19 @@ from django.contrib import admin
 from django.urls import reverse
 from django.utils.html import format_html
 
-from velunt.tasting.models import Event, Scorecard
+from velunt.tasting.models import (
+    AnswerKey,
+    AnswerKeyEntry,
+    Beer,
+    Event,
+    Scorecard,
+)
+
+
+class BeerInline(admin.TabularInline):
+    model = Beer
+    extra = 1
+    fields = ["name", "links"]
 
 
 class ScorecardInline(admin.TabularInline):
@@ -23,10 +35,16 @@ class ScorecardInline(admin.TabularInline):
 class EventAdmin(admin.ModelAdmin):
     list_display = ["description", "event_date", "scoring_system", "state"]
     list_filter = ["scoring_system"]
-    readonly_fields = ["public_id", "created_at", "event_page_link"]
+    readonly_fields = [
+        "public_id",
+        "created_at",
+        "event_page_link",
+        "answer_key_link",
+    ]
     fields = [
         "public_id",
         "event_page_link",
+        "answer_key_link",
         "description",
         "event_date",
         "scoring_system",
@@ -34,7 +52,7 @@ class EventAdmin(admin.ModelAdmin):
         "owner",
         "created_at",
     ]
-    inlines = [ScorecardInline]
+    inlines = [BeerInline, ScorecardInline]
 
     @admin.display(description="Status")
     def state(self, obj):
@@ -47,6 +65,19 @@ class EventAdmin(admin.ModelAdmin):
         url = reverse("tasting:event_detail", args=[obj.public_id])
         return format_html('<a href="{}">{}</a>', url, url)
 
+    @admin.display(description="Fasit")
+    def answer_key_link(self, obj):
+        if not obj.pk:
+            return "-"
+        try:
+            ak = obj.answer_key
+        except AnswerKey.DoesNotExist:
+            url = reverse("admin:tasting_answerkey_add") + f"?event={obj.pk}"
+            return format_html('<a href="{}">Opprett fasit</a>', url)
+        url = reverse("admin:tasting_answerkey_change", args=[ak.pk])
+        status = "Publisert" if ak.is_published else "Utkast"
+        return format_html('<a href="{}">{}</a>', url, status)
+
     def get_queryset(self, request):
         qs = super().get_queryset(request)
         if request.user.is_superuser:
@@ -57,6 +88,37 @@ class EventAdmin(admin.ModelAdmin):
         if not change:
             obj.owner = request.user
         super().save_model(request, obj, form, change)
+
+
+class AnswerKeyEntryInline(admin.TabularInline):
+    model = AnswerKeyEntry
+    extra = 1
+    fields = ["beer_number", "beer"]
+    autocomplete_fields = ["beer"]
+
+
+@admin.register(AnswerKey)
+class AnswerKeyAdmin(admin.ModelAdmin):
+    list_display = ["event", "is_published_display", "published_at"]
+    readonly_fields = ["created_by", "created_at"]
+    fields = ["event", "published_at", "created_by", "created_at"]
+    inlines = [AnswerKeyEntryInline]
+
+    @admin.display(description="Publisert", boolean=True)
+    def is_published_display(self, obj):
+        return obj.is_published
+
+    def save_model(self, request, obj, form, change):
+        if not change:
+            obj.created_by = request.user
+        super().save_model(request, obj, form, change)
+
+
+@admin.register(Beer)
+class BeerAdmin(admin.ModelAdmin):
+    list_display = ["name", "event"]
+    list_filter = ["event"]
+    search_fields = ["name"]
 
 
 @admin.register(Scorecard)
