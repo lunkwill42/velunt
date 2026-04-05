@@ -11,22 +11,22 @@ from velunt.tasting.scoring import get_scoring_system
 
 def landing(request):
     """Landing page with site title and event list."""
-    scorecard_ids = _get_all_session_scorecard_ids(request)
-    scorecards = Scorecard.objects.filter(public_id__in=scorecard_ids).select_related(
-        "event"
+    my_events, all_events = _get_visible_events(request)
+    return render(
+        request,
+        "tasting/landing.html",
+        {"my_events": my_events, "all_events": all_events},
     )
-    events = [sc.event for sc in scorecards]
-    return render(request, "tasting/landing.html", {"events": events})
 
 
 def event_list(request):
     """List events the current session has scorecards for."""
-    scorecard_ids = _get_all_session_scorecard_ids(request)
-    scorecards = Scorecard.objects.filter(public_id__in=scorecard_ids).select_related(
-        "event"
+    my_events, all_events = _get_visible_events(request)
+    return render(
+        request,
+        "tasting/event_list.html",
+        {"my_events": my_events, "all_events": all_events},
     )
-    events = [sc.event for sc in scorecards]
-    return render(request, "tasting/event_list.html", {"events": events})
 
 
 def scorecard_list(request):
@@ -310,6 +310,32 @@ def _get_beer_names(event):
     if not ak.is_published:
         return {}
     return {e.beer_number: e.beer.name for e in ak.entries.select_related("beer").all()}
+
+
+def _get_visible_events(request):
+    """Return events visible to the current user.
+
+    Superadmins see all events. Regular users see only events
+    where they have a scorecard in their session.
+    """
+    scorecard_ids = _get_all_session_scorecard_ids(request)
+    scorecards = Scorecard.objects.filter(public_id__in=scorecard_ids).select_related(
+        "event"
+    )
+    my_events = sorted(
+        [sc.event for sc in scorecards],
+        key=lambda e: e.event_date,
+        reverse=True,
+    )
+    my_event_ids = {e.pk for e in my_events}
+
+    all_events = []
+    if request.user.is_authenticated and request.user.is_superuser:
+        all_events = [
+            e for e in Event.objects.order_by("-event_date") if e.pk not in my_event_ids
+        ]
+
+    return my_events, all_events
 
 
 def _get_all_session_scorecard_ids(request):

@@ -1,13 +1,21 @@
 {% extends "base.html" %}
 
-{% block title %}Mine arrangementer — Velunt{% endblock %}
+{% block title %}Arrangementer — Velunt{% endblock %}
 
 {% block content %}
 <article>
     <header>
         <h1>Mine arrangementer</h1>
     </header>
-
-    {% include "tasting/_event_list.html" %}
+    {% include "tasting/_event_list.html" with events=my_events %}
 </article>
+
+{% if all_events %}
+<article>
+    <header>
+        <h1>Alle arrangementer</h1>
+    </header>
+    {% include "tasting/_event_list.html" with events=all_events %}
+</article>
+{% endif %}
 {% endblock %}

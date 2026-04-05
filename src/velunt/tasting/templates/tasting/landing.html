@@ -12,6 +12,13 @@
 
 <section>
     <h2>Mine arrangementer</h2>
-    {% include "tasting/_event_list.html" %}
+    {% include "tasting/_event_list.html" with events=my_events %}
 </section>
+
+{% if all_events %}
+<section>
+    <h2>Alle arrangementer</h2>
+    {% include "tasting/_event_list.html" with events=all_events %}
+</section>
+{% endif %}
 {% endblock %}
