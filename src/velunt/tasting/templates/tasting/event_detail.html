@@ -9,11 +9,11 @@
         <p>{{ event.event_date|date:"j. F Y" }}</p>
 
         {% if event.state == "not_yet_open" %}
-            <mark>Arrangementet har ikke startet ennå</mark>
+            <span class="event-status-pill event-status-not-yet-open">Ikke startet</span>
         {% elif event.state == "open" %}
-            <mark>Åpent for registrering</mark>
+            <span class="event-status-pill event-status-open">Åpent</span>
         {% elif event.state == "closed" %}
-            <mark>Avsluttet</mark>
+            <span class="event-status-pill event-status-closed">Avsluttet</span>
         {% endif %}
     </header>
 

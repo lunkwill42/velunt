@@ -11,6 +11,17 @@
         @media (max-width: 576px) {
             .container { padding-inline: 0.5rem; }
         }
+        .event-status-pill {
+            display: inline-block;
+            padding: 0.1rem 0.4rem;
+            border-radius: 1rem;
+            font-size: 0.7rem;
+            font-weight: 600;
+            color: #fff;
+        }
+        .event-status-open { background: var(--pico-ins-color, #2e7d32); }
+        .event-status-closed { background: var(--pico-del-color, #c62828); }
+        .event-status-not-yet-open { background: var(--pico-muted-color); }
     </style>
     {% block extra_head %}{% endblock %}
 </head>

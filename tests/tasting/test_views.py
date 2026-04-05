@@ -42,7 +42,7 @@ class TestEventDetailView:
         event = make_event()
         response = client.get(f"/event/{event.public_id}/")
         content = response.content.decode()
-        assert "Åpent for registrering" in content
+        assert "Åpent" in content
 
     def test_when_event_is_not_yet_open_it_should_show_not_started(
         self, client, make_event
@@ -52,7 +52,7 @@ class TestEventDetailView:
         )
         response = client.get(f"/event/{event.public_id}/")
         content = response.content.decode()
-        assert "ikke startet" in content
+        assert "Ikke startet" in content
 
     def test_when_event_is_closed_it_should_show_closed_status(
         self, client, make_event
