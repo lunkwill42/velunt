@@ -33,7 +33,7 @@ dev = [
 where = ["src"]
 
 [tool.pytest.ini_options]
-DJANGO_SETTINGS_MODULE = "velunt.settings"
+DJANGO_SETTINGS_MODULE = "velunt.settings.dev"
 # WhiteNoise warns when collectstatic has not been run, which tests do not need
 filterwarnings = ["ignore:No directory at:UserWarning"]
 

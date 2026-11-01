@@ -1,16 +1,12 @@
-import os
+"""Settings shared by all environments"""
+
 from pathlib import Path
 
-BASE_DIR = Path(__file__).resolve().parent.parent.parent
+from . import get_str_env
 
-SECRET_KEY = os.environ.get(
-    "DJANGO_SECRET_KEY",
-    "insecure-dev-key-change-in-production",
-)
+BASE_DIR = Path(__file__).resolve().parents[3]
 
-DEBUG = os.environ.get("DJANGO_DEBUG", "true").lower() in ("true", "1", "yes")
-
-ALLOWED_HOSTS = os.environ.get("DJANGO_ALLOWED_HOSTS", "localhost,127.0.0.1").split(",")
+DEBUG = False
 
 INSTALLED_APPS = [
     "django.contrib.admin",
@@ -59,11 +55,11 @@ WSGI_APPLICATION = "velunt.wsgi.application"
 DATABASES = {
     "default": {
         "ENGINE": "django.db.backends.postgresql",
-        "NAME": os.environ.get("POSTGRES_DB", "velunt"),
-        "USER": os.environ.get("POSTGRES_USER", "velunt"),
-        "PASSWORD": os.environ.get("POSTGRES_PASSWORD", "velunt"),
-        "HOST": os.environ.get("POSTGRES_HOST", "localhost"),
-        "PORT": os.environ.get("POSTGRES_PORT", "5432"),
+        "NAME": get_str_env("POSTGRES_DB", "velunt"),
+        "USER": get_str_env("POSTGRES_USER", "velunt"),
+        "PASSWORD": get_str_env("POSTGRES_PASSWORD", "velunt"),
+        "HOST": get_str_env("POSTGRES_HOST", "localhost"),
+        "PORT": get_str_env("POSTGRES_PORT", "5432"),
     }
 }
 
@@ -107,7 +103,4 @@ SESSION_COOKIE_AGE = 90 * 24 * 60 * 60  # 90 days
 
 LOGIN_URL = "/admin/login/"
 
-EMAIL_BACKEND = os.environ.get(
-    "DJANGO_EMAIL_BACKEND",
-    "django.core.mail.backends.console.EmailBackend",
-)
+EMAIL_SUBJECT_PREFIX = "[Velunt] "

@@ -18,7 +18,8 @@ Velunt is a web-based beer tasting event management system. Participants at blin
 
 All Python source code lives under `src/`. The project uses the `velunt` namespace:
 
-- `src/velunt/settings.py`, `src/velunt/urls.py` — Django project configuration.
+- `src/velunt/settings/` - Django settings. `base.py` holds what all environments share, while `dev.py` and `prod.py` add what is unique to development and production. `manage.py` defaults to `dev`, the WSGI/ASGI entry points to `prod`.
+- `src/velunt/urls.py` - Root URL configuration.
 - `src/velunt/accounts/` — Custom User model (`AbstractUser` subclass). `AUTH_USER_MODEL = "accounts.User"`.
 - `src/velunt/tasting/` — The main Django app for tasting event logic.
 - `tests/` — Test suite (top-level, not inside `src/`).
