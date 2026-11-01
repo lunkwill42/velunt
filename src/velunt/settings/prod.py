@@ -16,3 +16,19 @@ SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
 CSRF_TRUSTED_ORIGINS = [f"https://{host}" for host in ALLOWED_HOSTS]
 SESSION_COOKIE_SECURE = True
 CSRF_COOKIE_SECURE = True
+
+EMAIL_BACKEND = "django.core.mail.backends.smtp.EmailBackend"
+EMAIL_HOST = get_str_env("DJANGO_EMAIL_HOST", required=True)
+EMAIL_PORT = int(get_str_env("DJANGO_EMAIL_PORT", "587"))
+EMAIL_HOST_USER = get_str_env("DJANGO_EMAIL_HOST_USER")
+EMAIL_HOST_PASSWORD = get_str_env("DJANGO_EMAIL_HOST_PASSWORD")
+EMAIL_USE_TLS = get_bool_env("DJANGO_EMAIL_USE_TLS", default=True)
+DEFAULT_FROM_EMAIL = get_str_env("DJANGO_DEFAULT_FROM_EMAIL", required=True)
+SERVER_EMAIL = DEFAULT_FROM_EMAIL
+
+# Comma-separated addresses that receive server error reports
+ADMINS = [
+    ("", address.strip())
+    for address in get_str_env("DJANGO_ADMINS").split(",")
+    if address.strip()
+]
