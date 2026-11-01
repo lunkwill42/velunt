@@ -13,6 +13,7 @@ dependencies = [
     "django-htmx",
     "psycopg[binary]",
     "qrcode[pil]",
+    "whitenoise>=6.12.0",
 ]
 
 [dependency-groups]
@@ -28,6 +29,8 @@ where = ["src"]
 
 [tool.pytest.ini_options]
 DJANGO_SETTINGS_MODULE = "velunt.settings"
+# WhiteNoise warns when collectstatic has not been run, which tests do not need
+filterwarnings = ["ignore:No directory at:UserWarning"]
 
 [tool.ruff]
 target-version = "py314"
