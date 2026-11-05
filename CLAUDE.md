@@ -79,7 +79,14 @@ Event and scorecard IDs must be short enough for humans to type, but not guessab
 - Start with a capital letter, do not end with punctuation.
 - Keep the subject line to 50 characters or less.
 - Separate subject from body with a blank line; wrap body at 72 characters.
-- Use the body to explain *what* and *why*, not *how*.
+- Most commits need no body. Add one only when the *why* is not evident from the subject and the diff together.
+- The body says why the change was made, to what end. It does not restate what the diff shows.
+- Treat a body longer than the diff it describes as a smell, and cut it back unless the change is genuinely counter-intuitive.
+- Each piece of rationale gets one home, not two:
+  - Why a line or function is shaped the way it is goes in a code comment or docstring.
+  - Why a set of changes hangs together goes in the commit body.
+  - Why this approach rather than another goes in the pull request description or review discussion.
+- One idea per sentence. Split a sentence that runs past roughly 25 words, or that needs more than one comma to hold together. This applies to code comments and docstrings as well.
 - Restrained use of markdown in commit messages is fine; use backticks to quote function names and code identifiers.
 - NEVER add `Co-Authored-By` or other AI attribution tags to commit messages.
 - Prefer small, focused commits that touch a single concept. Each commit should make sense on its own and produce a useful `git blame` history. Avoid lumping unrelated changes together.
