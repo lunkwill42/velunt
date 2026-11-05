@@ -7,6 +7,7 @@ name = "velunt"
 version = "0.1.0"
 description = "Beer tasting event management system"
 license = "MIT"
+license-files = ["LICENSE"]
 requires-python = ">=3.13"
 dependencies = [
     "Django>=5.2,<6",
