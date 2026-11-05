@@ -67,6 +67,11 @@ Event and scorecard IDs must be short enough for humans to type, but not guessab
 - Max line width: 88. Long test names are acceptable: add `# noqa: E501` instead of shortening them.
 - Format quote style: `"preserve"`.
 - Follow Robert Martin's **step-down rule**: higher-level functions appear before the lower-level functions they call. Since Python requires definitions before use in some contexts, this cannot always be followed strictly, but aim for it where possible.
+  - **This applies to test modules too.** Test functions and classes are the high-level readers, so they belong *above* the pytest fixtures and module-level helpers they use. Fixtures and helpers resolve at call time, so parking them at the top of a test file inverts step-down order.
+- **Keep nesting shallow.** Deeply nested code is hard to read and reason about. Two remedies:
+  1. **Return early.** Handle edge cases and failures first with guard clauses (`return`, `raise`, or `continue` in loops). The main path then stays at the outermost level instead of inside an `else`.
+  2. **Extract nested logic into smaller functions.** When a nested block seems to need an explanatory comment, move it into a function whose name makes the comment unnecessary.
+- Once a code pattern is repeated three times or more, refactor it to remove the redundancy, or at least point out the opportunity.
 
 ## Commits
 
