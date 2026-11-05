@@ -91,6 +91,13 @@ Event and scorecard IDs must be short enough for humans to type, but not guessab
 - NEVER attribute commits to AI or other code generation tools (`Co-Authored-By: Claude`, "Generated with ...", and similar). Only humans can be held accountable for code, so only humans get attribution. Crediting a human co-author with `Co-authored-by:` is fine and expected when a commit builds on their work.
 - Prefer small, focused commits that touch a single concept. Each commit should make sense on its own and produce a useful `git blame` history. Avoid lumping unrelated changes together.
 
+## Issues and Pull Requests
+
+- Do not hard-wrap paragraph prose. GitHub-flavored markdown renders every newline inside a paragraph as a visible line break. Put each paragraph on a single line and separate paragraphs with blank lines.
+- Hyperlink code references to the source on GitHub. Prefer permalinks tied to a commit SHA rather than a branch name, so the links do not rot: `https://github.com/<owner>/<repo>/blob/<sha>/<path>#L<start>-L<end>`.
+- Never reference files that are not tracked in the repository, such as scratch files or anything covered by `.gitignore`. Readers on GitHub cannot see them.
+- Do not enumerate the commits in a pull request description. Reviewers can read the commit list, and the commit messages should already explain each step. Focus on why the change is being made, its user-visible effect, and any cross-references to issues or follow-ups.
+
 ## Testing
 
 - Use `pytest` as the test runner.
