@@ -1,6 +1,6 @@
 import string
 
-from velunt.tasting.utils import generate_public_id
+from velunt.tasting.utils import generate_host_token, generate_public_id
 
 VALID_CHARS = set(string.ascii_letters + string.digits)
 
@@ -20,3 +20,15 @@ class TestGeneratePublicId:
         a = generate_public_id()
         b = generate_public_id()
         assert a != b
+
+
+class TestGenerateHostToken:
+    def test_when_called_it_should_return_a_url_safe_token(self):
+        token = generate_host_token()
+        assert set(token) <= VALID_CHARS | {"-", "_"}
+
+    def test_when_called_it_should_be_much_longer_than_public_ids(self):
+        assert len(generate_host_token()) >= 20
+
+    def test_when_called_twice_it_should_return_different_values(self):
+        assert generate_host_token() != generate_host_token()

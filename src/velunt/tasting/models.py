@@ -29,6 +29,15 @@ class Event(models.Model):
         max_length=50,
         choices=SCORING_SYSTEM_CHOICES,
     )
+    # Secret part of the link that lets the host manage the beer list
+    host_token = models.CharField(
+        "vertskapsnøkkel",
+        max_length=32,
+        unique=True,
+        null=True,
+        blank=True,
+        editable=False,
+    )
 
     class Meta:
         ordering = ["-event_date"]
