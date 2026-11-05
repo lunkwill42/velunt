@@ -88,7 +88,7 @@ Event and scorecard IDs must be short enough for humans to type, but not guessab
   - Why this approach rather than another goes in the pull request description or review discussion.
 - One idea per sentence. Split a sentence that runs past roughly 25 words, or that needs more than one comma to hold together. This applies to code comments and docstrings as well.
 - Restrained use of markdown in commit messages is fine; use backticks to quote function names and code identifiers.
-- NEVER add `Co-Authored-By` or other AI attribution tags to commit messages.
+- NEVER attribute commits to AI or other code generation tools (`Co-Authored-By: Claude`, "Generated with ...", and similar). Only humans can be held accountable for code, so only humans get attribution. Crediting a human co-author with `Co-authored-by:` is fine and expected when a commit builds on their work.
 - Prefer small, focused commits that touch a single concept. Each commit should make sense on its own and produce a useful `git blame` history. Avoid lumping unrelated changes together.
 
 ## Testing
