@@ -1,0 +1,30 @@
+{% if beers %}
+<table class="striped host-beer-table">
+    <thead>
+        <tr>
+            <th>Navn</th>
+            <th>Lenker</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for beer in beers %}
+        <tr>
+            <td>
+                {{ beer.name }}
+                {% if beer.is_homebrew %}<span class="badge-homebrew">Hjemmebrygg</span>{% endif %}
+            </td>
+            <td>
+                <div class="beer-links">
+                    {% for link in beer.links.all %}
+                        <a href="{{ link.url }}" class="beer-link-pill" target="_blank" rel="noopener">{{ link.label }}</a>
+                    {% endfor %}
+                </div>
+            </td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+<p><small>{{ beers|length }} øl på listen.</small></p>
+{% else %}
+<p>Ingen øl er lagt inn ennå.</p>
+{% endif %}

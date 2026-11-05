@@ -1,0 +1,153 @@
+{% extends "base.html" %}
+
+{% block title %}Ølliste: {{ event.description }} - Velunt{% endblock %}
+
+{% block extra_head %}
+<style>
+    .host-message {
+        border-left: 3px solid var(--pico-ins-color, #2e7d32);
+        padding-left: 0.75rem;
+    }
+    .host-beer-table td {
+        vertical-align: top;
+    }
+    .host-beer-table .beer-links {
+        margin-bottom: 0;
+    }
+    .format-help code {
+        white-space: pre;
+    }
+    /* Pico renders the summary like body text, with its chevron at the far
+       edge. Make it look clickable, and keep the chevron next to the label. */
+    .format-help > summary {
+        display: flex;
+        align-items: center;
+        gap: 0.4em;
+        color: var(--pico-primary);
+    }
+    .format-help[open] > summary:not(:focus) {
+        color: var(--pico-primary);
+    }
+    .format-help > summary:hover {
+        color: var(--pico-primary-hover);
+    }
+    .format-help > summary svg {
+        flex: none;
+        width: 1.1em;
+        height: 1.1em;
+    }
+    /* The frame sits on a wrapper rather than ::details-content, whose box
+       remains while closed and would show an empty frame */
+    .format-help-body {
+        padding: var(--pico-spacing);
+        border: 1px solid var(--pico-muted-border-color);
+        border-radius: var(--pico-border-radius);
+        background: var(--pico-card-sectioning-background-color);
+        margin-bottom: var(--pico-spacing);
+    }
+    .format-help-body > :last-child {
+        margin-bottom: 0;
+    }
+    .format-help > summary::after {
+        /* A mask lets the chevron follow the text color, as the icon does */
+        float: none;
+        margin: 0;
+        background: currentColor;
+        mask: var(--pico-icon-chevron) no-repeat center / contain;
+        forced-color-adjust: none;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<article>
+    <header>
+        <hgroup>
+            <h1>{{ event.description }}</h1>
+            <p>Her legger vertskapet inn ølene som skal smakes.</p>
+        </hgroup>
+        {% include "tasting/_calendar_icon.html" with date=event.event_date %}
+    </header>
+
+    {% for message in messages %}
+        <p class="host-message">{{ message }}</p>
+    {% endfor %}
+
+    <section>
+        <h2>Ølliste</h2>
+        <div id="beer-list">
+            {% include "tasting/_host_beer_list.html" %}
+        </div>
+    </section>
+
+    <section>
+        <h2>Importer øl</h2>
+        <details class="format-help">
+            <summary>
+                <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/></svg>
+                Forventet format
+            </summary>
+            <div class="format-help-body">
+                <p>
+                    Merk radene i regnearket, kopier dem og lim dem inn under.
+                    Første rad må inneholde kolonnetitler, for eksempel:
+                </p>
+                <p><code>Navn	Hjemmebrygg	Vinmonopolet	Untappd</code></p>
+                <ul>
+                    <li>
+                        Kolonnen med ølnavn må ha tittelen «Navn». Uten en slik
+                        kolonne brukes første kolonne.
+                    </li>
+                    <li>
+                        En kolonne med tittelen «Hjemmebrygg» er valgfri. Tom celle,
+                        <code>0</code>, <code>-</code>, <code>nei</code>,
+                        <code>no</code> og <code>false</code> betyr nei. Alt annet
+                        betyr ja.
+                    </li>
+                    <li>
+                        Kolonner med lenker (som starter med <code>http://</code>
+                        eller <code>https://</code>) blir lenker til mer informasjon
+                        om ølet. Kolonnetittelen blir navnet på lenken.
+                    </li>
+                    <li>Andre kolonner blir ignorert.</li>
+                </ul>
+                <p>
+                    Øl som allerede står på listen, blir oppdatert i stedet for å
+                    legges til på nytt. Det samme gjelder øl som står flere ganger i
+                    innlimingen.
+                </p>
+            </div>
+        </details>
+        <form method="post" action="{% url 'tasting:import_beers' event.host_token %}">
+            {% csrf_token %}
+            <label for="beer-list-input">Rader fra regnearket</label>
+            <textarea id="beer-list-input"
+                      name="beer_list"
+                      rows="6"
+                      hx-post="{% url 'tasting:preview_beer_import' event.host_token %}"
+                      hx-trigger="input changed delay:400ms, restored"
+                      hx-target="#import-preview"
+                      ></textarea>
+            <div id="import-preview"></div>
+            <label>
+                <input type="checkbox" name="replace" role="switch">
+                Erstatt hele listen (øl som ikke er med i innlimingen, fjernes)
+            </label>
+            <button type="submit">Importer</button>
+        </form>
+    </section>
+</article>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Browsers restore pasted text on reload or back navigation without
+    // firing an input event, so the preview must be asked for explicitly
+    window.addEventListener("pageshow", function() {
+        var input = document.getElementById("beer-list-input");
+        if (input && input.value.trim()) {
+            htmx.trigger(input, "restored");
+        }
+    });
+</script>
+{% endblock %}

@@ -1,0 +1,37 @@
+{% if parsed.beers %}
+<article>
+    <header>
+        <strong>Forhåndsvisning: {{ parsed.beers|length }} øl</strong>
+        {% if parsed.ignored_columns %}
+            <br><small>Ignorerte kolonner: {{ parsed.ignored_columns|join:", " }}</small>
+        {% endif %}
+    </header>
+    <table class="striped host-beer-table">
+        <thead>
+            <tr>
+                <th>Navn</th>
+                <th>Lenker</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for beer in parsed.beers %}
+            <tr>
+                <td>
+                    {{ beer.name }}
+                    {% if beer.is_homebrew %}<span class="badge-homebrew">Hjemmebrygg</span>{% endif %}
+                </td>
+                <td>
+                    <div class="beer-links">
+                        {% for link in beer.links %}
+                            <a href="{{ link.url }}" class="beer-link-pill" target="_blank" rel="noopener">{{ link.label }}</a>
+                        {% endfor %}
+                    </div>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</article>
+{% elif has_input %}
+<p>Fant ingen øl. Har du husket kolonnetitler på første rad?</p>
+{% endif %}

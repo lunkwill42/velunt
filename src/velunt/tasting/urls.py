@@ -1,6 +1,6 @@
 from django.urls import path
 
-from velunt.tasting import views
+from velunt.tasting import host_views, views
 
 app_name = "tasting"
 
@@ -44,4 +44,11 @@ urlpatterns = [
         views.cancel_delete_line,
         name="cancel_delete_line",
     ),
+    path("host/<str:token>/", host_views.host_beer_list, name="host_beer_list"),
+    path(
+        "host/<str:token>/preview/",
+        host_views.preview_beer_import,
+        name="preview_beer_import",
+    ),
+    path("host/<str:token>/import/", host_views.import_beers, name="import_beers"),
 ]
