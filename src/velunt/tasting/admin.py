@@ -1,7 +1,10 @@
 from django import forms
 from django.contrib import admin
+from django.core.exceptions import PermissionDenied
 from django.forms.models import BaseInlineFormSet
-from django.urls import reverse
+from django.http import Http404, HttpResponseNotAllowed
+from django.shortcuts import redirect
+from django.urls import path, reverse
 from django.utils.html import format_html
 
 from velunt.tasting.models import (
@@ -13,6 +16,7 @@ from velunt.tasting.models import (
     Scorecard,
     ScorecardLine,
 )
+from velunt.tasting.utils import generate_host_token
 
 
 class BeerInline(admin.TabularInline):
@@ -64,11 +68,13 @@ class EventAdmin(admin.ModelAdmin):
         "created_at",
         "event_page_link",
         "answer_key_link",
+        "host_page_link",
     ]
     fields = [
         "public_id",
         "event_page_link",
         "answer_key_link",
+        "host_page_link",
         "description",
         "event_date",
         "scoring_system",
@@ -103,6 +109,43 @@ class EventAdmin(admin.ModelAdmin):
         status = "Publisert" if ak.is_published else "Utkast"
         return format_html('<a href="{}">{}</a>', url, status)
 
+    @admin.display(description="Vertskapslenke")
+    def host_page_link(self, obj):
+        if not obj.pk:
+            return "-"
+        if not obj.host_token:
+            return format_html(
+                "Ingen ennå. {}", _host_link_button("Lag vertskapslenke")
+            )
+        url = reverse("tasting:host_beer_list", args=[obj.host_token])
+        button = _host_link_button("Lag ny vertskapslenke", replaces_old=True)
+        return format_html('<a href="{}">{}</a> {}', url, url, button)
+
+    def get_urls(self):
+        urls = [
+            path(
+                "<path:object_id>/regenerate-host-link/",
+                self.admin_site.admin_view(self.regenerate_host_link_view),
+                name="tasting_event_regenerate_host_link",
+            ),
+        ]
+        return urls + super().get_urls()
+
+    def regenerate_host_link_view(self, request, object_id):
+        if request.method != "POST":
+            return HttpResponseNotAllowed(["POST"])
+        event = self.get_object(request, object_id)
+        if event is None:
+            raise Http404
+        if not self.has_change_permission(request, event):
+            raise PermissionDenied
+        event.host_token = generate_host_token()
+        event.save(update_fields=["host_token"])
+        self.message_user(
+            request, "Ny vertskapslenke er laget. Eventuelle gamle lenker virker ikke."
+        )
+        return redirect("admin:tasting_event_change", event.pk)
+
     def get_queryset(self, request):
         qs = super().get_queryset(request)
         if request.user.is_superuser:
@@ -125,6 +168,26 @@ class EventAdmin(admin.ModelAdmin):
                 line.save()
                 count += 1
         self.message_user(request, f"{count} poenglinjer beregnet på nytt.")
+
+
+def _host_link_button(label, replaces_old=False):
+    """Button for the form in admin/tasting/event/change_form.html
+
+    That form lives outside the main change form. Pressing Enter in a field
+    would otherwise make a new host link instead of saving the event.
+    """
+    confirm = ""
+    if replaces_old:
+        confirm = format_html(
+            ' onclick="return confirm(\'{}\')"',
+            "Den gamle vertskapslenken slutter å virke. Fortsette?",
+        )
+    return format_html(
+        '<button type="submit" form="regenerate-host-link" class="button"{}>'
+        "{}</button>",
+        confirm,
+        label,
+    )
 
 
 class AnswerKeyEntryFormSet(BaseInlineFormSet):

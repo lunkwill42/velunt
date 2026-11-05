@@ -1,0 +1,10 @@
+{% extends "admin/change_form.html" %}
+
+{% block content %}
+{{ block.super }}
+{% if original.pk %}
+<form id="regenerate-host-link" method="post" action="{% url 'admin:tasting_event_regenerate_host_link' original.pk %}">
+    {% csrf_token %}
+</form>
+{% endif %}
+{% endblock %}
