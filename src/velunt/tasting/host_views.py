@@ -1,11 +1,13 @@
 """Views for event hosts, who manage the beer list through a secret link"""
 
 from django.contrib import messages
-from django.http import HttpResponseNotAllowed
+from django.http import HttpResponseForbidden, HttpResponseNotAllowed
 from django.shortcuts import get_object_or_404, redirect, render
 
 from velunt.tasting.beer_import import import_beer_list, parse_beer_list
 from velunt.tasting.models import Beer, Event
+
+LOCKED_MESSAGE = "Resultatene er publisert, så øllisten kan ikke lenger endres."
 
 
 def host_beer_list(request, token):
@@ -13,7 +15,11 @@ def host_beer_list(request, token):
     return render(
         request,
         "tasting/host_beer_list.html",
-        {"event": event, "beers": _get_beers(event)},
+        {
+            "event": event,
+            "beers": _get_beers(event),
+            "locked_message": LOCKED_MESSAGE,
+        },
     )
 
 
@@ -34,6 +40,8 @@ def import_beers(request, token):
     event = _get_event(token)
     if request.method != "POST":
         return HttpResponseNotAllowed(["POST"])
+    if event.is_beer_list_locked:
+        return HttpResponseForbidden(LOCKED_MESSAGE)
     parsed = parse_beer_list(request.POST.get("beer_list", ""))
     result = import_beer_list(event, parsed, replace=bool(request.POST.get("replace")))
     messages.success(request, _describe_import(result))
@@ -44,6 +52,8 @@ def delete_beer(request, token, beer_id):
     event = _get_event(token)
     if request.method != "DELETE":
         return HttpResponseNotAllowed(["DELETE"])
+    if event.is_beer_list_locked:
+        return HttpResponseForbidden(LOCKED_MESSAGE)
     beer = get_object_or_404(Beer, pk=beer_id, event=event)
     error = None
     if beer.is_in_answer_key:

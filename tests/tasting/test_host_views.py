@@ -1,4 +1,5 @@
 import pytest
+from django.utils import timezone
 
 from velunt.tasting.models import AnswerKey, AnswerKeyEntry, Beer
 from velunt.tasting.utils import generate_host_token
@@ -122,6 +123,37 @@ class TestDeleteBeerView:
         beer = Beer.objects.create(event=event, name="Julebokk")
         response = client.get(host_url(event, f"beer/{beer.pk}/"))
         assert response.status_code == 405
+
+
+class TestLockedBeerList:
+    def test_when_locked_it_should_not_offer_import(self, client, locked_event):
+        content = client.get(host_url(locked_event)).content.decode()
+        assert "Importer øl" not in content
+        assert "kan ikke lenger endres" in content
+
+    def test_when_locked_it_should_refuse_import(self, client, locked_event):
+        response = client.post(
+            host_url(locked_event, "import/"), {"beer_list": BEER_LIST}
+        )
+
+        assert response.status_code == 403
+        assert not locked_event.beers.exists()
+
+    def test_when_locked_it_should_refuse_removing_beers(self, client, locked_event):
+        beer = Beer.objects.create(event=locked_event, name="Julebokk")
+
+        response = client.delete(host_url(locked_event, f"beer/{beer.pk}/"))
+
+        assert response.status_code == 403
+        assert locked_event.beers.exists()
+
+
+@pytest.fixture()
+def locked_event(event, user):
+    event.closed_at = timezone.now()
+    event.save()
+    AnswerKey.objects.create(event=event, created_by=user, published_at=timezone.now())
+    return event
 
 
 @pytest.fixture()

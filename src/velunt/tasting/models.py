@@ -59,6 +59,16 @@ class Event(models.Model):
             return "not_yet_open"
         return "open"
 
+    @property
+    def is_beer_list_locked(self):
+        """Whether results are out, so that only superusers may change the beers"""
+        if self.state != "closed":
+            return False
+        try:
+            return self.answer_key.is_published
+        except AnswerKey.DoesNotExist:
+            return False
+
 
 class Scorecard(models.Model):
     public_id = models.CharField(

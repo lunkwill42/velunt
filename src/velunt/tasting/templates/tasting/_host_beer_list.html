@@ -25,7 +25,7 @@
                 </div>
             </td>
             <td class="beer-remove">
-                {% if not beer.is_in_answer_key %}
+                {% if not event.is_beer_list_locked and not beer.is_in_answer_key %}
                 <button type="button"
                         class="outline secondary"
                         onclick="this.hidden = true; this.nextElementSibling.hidden = false"

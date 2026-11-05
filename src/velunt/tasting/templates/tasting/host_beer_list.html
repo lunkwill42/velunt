@@ -93,6 +93,9 @@
         </div>
     </section>
 
+    {% if event.is_beer_list_locked %}
+    <p>{{ locked_message }}</p>
+    {% else %}
     <section>
         <h2>Importer øl</h2>
         <details class="format-help">
@@ -149,6 +152,7 @@
             <button type="submit">Importer</button>
         </form>
     </section>
+    {% endif %}
 </article>
 {% endblock %}
 
