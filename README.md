@@ -309,3 +309,14 @@ implementasjonsidéer at det ble vanskelig å få sove for natten.
   skjema og arrangementer (det er et sjeldent under om vi kommer over 100
   arrangementer), så det trengs en avveining mellom lengde og hvor lett det er
   å gjette seg til ID-er.
+
+# Lisens
+
+Velunt er åpen kildekode, lisensiert under [MIT-lisensen](LICENSE).
+
+Følgende tredjepartsfiler er inkludert i kildekoden, og har sine egne lisenser:
+
+- [htmx](https://htmx.org/) 2.0.4
+  (`src/velunt/tasting/static/vendor/htmx.min.js`): 0BSD.
+- [Pico CSS](https://picocss.com/) 2.1.1
+  (`src/velunt/tasting/static/vendor/pico.min.css`): MIT.
