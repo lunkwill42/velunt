@@ -12,7 +12,7 @@ dependencies = [
     "Django>=5.2,<6",
     "django-htmx",
     "psycopg[binary]",
-    "qrcode[pil]",
+    "qrcode",
     "whitenoise>=6.12.0",
 ]
 
