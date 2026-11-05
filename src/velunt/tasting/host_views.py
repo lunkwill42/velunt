@@ -5,7 +5,7 @@ from django.http import HttpResponseNotAllowed
 from django.shortcuts import get_object_or_404, redirect, render
 
 from velunt.tasting.beer_import import import_beer_list, parse_beer_list
-from velunt.tasting.models import Event
+from velunt.tasting.models import Beer, Event
 
 
 def host_beer_list(request, token):
@@ -38,6 +38,23 @@ def import_beers(request, token):
     result = import_beer_list(event, parsed, replace=bool(request.POST.get("replace")))
     messages.success(request, _describe_import(result))
     return redirect("tasting:host_beer_list", token=token)
+
+
+def delete_beer(request, token, beer_id):
+    event = _get_event(token)
+    if request.method != "DELETE":
+        return HttpResponseNotAllowed(["DELETE"])
+    beer = get_object_or_404(Beer, pk=beer_id, event=event)
+    error = None
+    if beer.is_in_answer_key:
+        error = f"{beer.name} er med i fasiten og kan ikke fjernes."
+    else:
+        beer.delete()
+    return render(
+        request,
+        "tasting/_host_beer_list.html",
+        {"event": event, "beers": _get_beers(event), "error": error},
+    )
 
 
 def _get_event(token):

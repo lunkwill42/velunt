@@ -1,6 +1,6 @@
 import pytest
 
-from velunt.tasting.models import Beer
+from velunt.tasting.models import AnswerKey, AnswerKeyEntry, Beer
 from velunt.tasting.utils import generate_host_token
 
 BEER_LIST = "Navn\tHjemmebrygg\tUntappd\nUnderlig Jul\t\thttps://untappd.com/b/1\n"
@@ -84,6 +84,43 @@ class TestImportBeersView:
 
     def test_when_using_get_it_should_return_405(self, client, event):
         response = client.get(host_url(event, "import/"))
+        assert response.status_code == 405
+
+
+class TestDeleteBeerView:
+    def test_when_beer_is_not_in_answer_key_it_should_remove_it(self, client, event):
+        beer = Beer.objects.create(event=event, name="Julebokk")
+
+        response = client.delete(host_url(event, f"beer/{beer.pk}/"))
+
+        assert response.status_code == 200
+        assert not event.beers.exists()
+
+    def test_when_beer_is_in_answer_key_it_should_keep_it_and_explain_why(
+        self, client, event, user
+    ):  # noqa: E501
+        beer = Beer.objects.create(event=event, name="Julebokk")
+        answer_key = AnswerKey.objects.create(event=event, created_by=user)
+        AnswerKeyEntry.objects.create(answer_key=answer_key, beer_number=1, beer=beer)
+
+        response = client.delete(host_url(event, f"beer/{beer.pk}/"))
+
+        assert "kan ikke fjernes" in response.content.decode()
+        assert event.beers.exists()
+
+    def test_when_beer_belongs_to_another_event_it_should_return_404(
+        self, client, event, make_event
+    ):  # noqa: E501
+        beer = Beer.objects.create(event=make_event(), name="Julebokk")
+
+        response = client.delete(host_url(event, f"beer/{beer.pk}/"))
+
+        assert response.status_code == 404
+        assert Beer.objects.filter(pk=beer.pk).exists()
+
+    def test_when_using_get_it_should_return_405(self, client, event):
+        beer = Beer.objects.create(event=event, name="Julebokk")
+        response = client.get(host_url(event, f"beer/{beer.pk}/"))
         assert response.status_code == 405
 
 

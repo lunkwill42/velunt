@@ -1,9 +1,13 @@
+{% if error %}
+<p class="host-error">{{ error }}</p>
+{% endif %}
 {% if beers %}
 <table class="striped host-beer-table">
     <thead>
         <tr>
             <th>Navn</th>
             <th>Lenker</th>
+            <th></th>
         </tr>
     </thead>
     <tbody>
@@ -19,6 +23,24 @@
                         <a href="{{ link.url }}" class="beer-link-pill" target="_blank" rel="noopener">{{ link.label }}</a>
                     {% endfor %}
                 </div>
+            </td>
+            <td class="beer-remove">
+                {% if not beer.is_in_answer_key %}
+                <button type="button"
+                        class="outline secondary"
+                        onclick="this.hidden = true; this.nextElementSibling.hidden = false"
+                        >Fjern</button>
+                <span hidden>
+                    <button type="button"
+                            hx-delete="{% url 'tasting:delete_beer' event.host_token beer.pk %}"
+                            hx-target="#beer-list"
+                            >Ja, fjern</button>
+                    <button type="button"
+                            class="outline"
+                            onclick="this.parentElement.hidden = true; this.parentElement.previousElementSibling.hidden = false"
+                            >Avbryt</button>
+                </span>
+                {% endif %}
             </td>
         </tr>
         {% endfor %}

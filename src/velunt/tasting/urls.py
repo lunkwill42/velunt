@@ -51,4 +51,9 @@ urlpatterns = [
         name="preview_beer_import",
     ),
     path("host/<str:token>/import/", host_views.import_beers, name="import_beers"),
+    path(
+        "host/<str:token>/beer/<int:beer_id>/",
+        host_views.delete_beer,
+        name="delete_beer",
+    ),
 ]
