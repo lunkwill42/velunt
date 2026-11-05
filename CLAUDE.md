@@ -24,6 +24,17 @@ All Python source code lives under `src/`. The project uses the `velunt` namespa
 - `src/velunt/tasting/` - The main Django app for tasting event logic.
 - `tests/` - Test suite (top-level, not inside `src/`).
 
+## Settings
+
+- Never gate settings or behaviour on `DEBUG` (no `if not DEBUG:` in `base.py` or elsewhere). Put what differs between environments in `dev.py` or `prod.py` instead.
+- The reason is troubleshooting: turning `DEBUG` on in production must not change anything else about how production behaves.
+- Production reads secrets from environment variables and refuses to start without them (`get_str_env(..., required=True)`).
+
+## Branches and Deployment
+
+- `main` is what runs in production. Never commit directly to `main`; do all work on a feature branch.
+- The deployment configuration lives outside this repository. When a change needs new environment variables or services, say so explicitly in the pull request description.
+
 ## Key Domain Concepts
 
 - **Arrangement (Event):** A tasting event with a non-guessable short ID, created by an authenticated Django user. Can be open (accepting submissions) or closed.
