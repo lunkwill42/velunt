@@ -317,9 +317,12 @@ Follow the conventions from NAV's contributor checklist (based on https://cbea.m
 12. **Norwegian UI text** — All user-facing text in Norwegian with i18n markup.
 13. **Mobile styling** — Responsive, mobile-first CSS.
 
+### Implemented after MVP
+
+- **Host page for the beer list:** Organizers create a secret host link with a button on the event page in the admin. Making a new link invalidates any earlier one. Through the link, the host pastes tab-separated rows from a spreadsheet, sees a preview, and imports them. The first row holds column titles: a «Navn» column (otherwise the first column), an optional «Hjemmebrygg» column, and any columns containing URLs, which become beer links labelled by the column title. Beers already on the list are updated rather than duplicated. The host can choose to replace the whole list, and can remove single beers. Beers used in the answer key are never removed. Once the event is closed and its answer key published, the list is locked for the host.
+
 ### Post-MVP (Priority 2)
 
-- Bulk beer import: a textarea in the admin where organizers can paste tab-separated lines from a spreadsheet (beer name per line, optionally with URL columns) to bulk-create Beer objects for an event.
 - Judge statistics: most/least generous scorer, average scores.
 - Control beer variance analysis (how consistent each judge's scores were across duplicate servings of the same beer).
 - Custom organizer pages (outside Django admin) for managing events and answer key.
