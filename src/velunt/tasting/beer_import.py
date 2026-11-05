@@ -1,4 +1,4 @@
-"""Parsing of beer lists pasted from spreadsheets.
+"""Parsing and import of beer lists pasted from spreadsheets.
 
 Copying cells from a spreadsheet yields one line per row, with cells separated by
 tabs. The first row holds column titles, unless it already contains a URL. The
@@ -9,6 +9,10 @@ links whose label is the column title.
 
 from dataclasses import dataclass, field
 from urllib.parse import urlsplit
+
+from django.db import transaction
+
+from velunt.tasting.models import Beer, BeerLink
 
 NAME_TITLES = {"navn", "ølnavn", "øl", "name", "beer"}
 HOMEBREW_TITLES = {"hjemmebrygg", "homebrew"}
@@ -40,6 +44,14 @@ class ParsedBeerList:
 
 
 @dataclass
+class ImportResult:
+    created: int = 0
+    existing: int = 0
+    removed: int = 0
+    kept: list[str] = field(default_factory=list)
+
+
+@dataclass
 class Columns:
     name: int
     homebrew: int | None
@@ -61,6 +73,34 @@ def parse_beer_list(text):
     )
 
 
+def import_beer_list(event, parsed, replace=False):
+    """Add parsed beers to an event, updating the beers it already has.
+
+    With `replace`, beers missing from the parsed list are removed first. Beers
+    used in the answer key are kept regardless, and reported in the result.
+    """
+    result = ImportResult()
+    with transaction.atomic():
+        if replace:
+            _remove_beers_not_in(event, parsed, result)
+        beers_by_name = {beer.name.casefold(): beer for beer in event.beers.all()}
+        for parsed_beer in parsed.beers:
+            beer = beers_by_name.get(parsed_beer.name.casefold())
+            if beer:
+                beer.is_homebrew = parsed_beer.is_homebrew
+                beer.save(update_fields=["is_homebrew"])
+                result.existing += 1
+            else:
+                beer = Beer.objects.create(
+                    event=event,
+                    name=parsed_beer.name,
+                    is_homebrew=parsed_beer.is_homebrew,
+                )
+                result.created += 1
+            _add_missing_links(beer, parsed_beer.links)
+    return result
+
+
 def parse_bool(value):
     """Interpret a spreadsheet cell as a yes/no value"""
     return value.strip().casefold() not in FALSE_VALUES
@@ -73,6 +113,27 @@ def label_for_url(url):
         if hostname == domain or hostname.endswith(f".{domain}"):
             return label
     return hostname or url
+
+
+def _remove_beers_not_in(event, parsed, result):
+    wanted = {beer.name.casefold() for beer in parsed.beers}
+    for beer in event.beers.all():
+        if beer.name.casefold() in wanted:
+            continue
+        if beer.is_in_answer_key:
+            result.kept.append(beer.name)
+            continue
+        beer.delete()
+        result.removed += 1
+
+
+def _add_missing_links(beer, links):
+    known_urls = set(beer.links.values_list("url", flat=True))
+    BeerLink.objects.bulk_create(
+        BeerLink(beer=beer, label=link.label, url=link.url)
+        for link in links
+        if link.url not in known_urls
+    )
 
 
 def _split_rows(text):

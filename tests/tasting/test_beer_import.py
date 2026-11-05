@@ -1,11 +1,15 @@
 import pytest
 
 from velunt.tasting.beer_import import (
+    ParsedBeer,
+    ParsedBeerList,
     ParsedLink,
+    import_beer_list,
     label_for_url,
     parse_beer_list,
     parse_bool,
 )
+from velunt.tasting.models import AnswerKey, AnswerKeyEntry, Beer
 
 
 class TestParseBeerList:
@@ -145,6 +149,95 @@ class TestLabelForUrl:
     )
     def test_when_domain_is_given_it_should_return_matching_label(self, url, label):
         assert label_for_url(url) == label
+
+
+class TestImportBeerList:
+    def test_when_event_has_no_beers_it_should_create_all_of_them(self, event):
+        result = import_beer_list(event, beer_list("Underlig Jul", "Julebokk"))
+
+        assert result.created == 2
+        assert beer_names(event) == ["Julebokk", "Underlig Jul"]
+
+    def test_when_beer_exists_it_should_update_it_instead_of_adding_another(
+        self, event
+    ):  # noqa: E501
+        Beer.objects.create(event=event, name="Underlig Jul")
+        parsed = ParsedBeerList(beers=[ParsedBeer("underlig jul", is_homebrew=True)])
+
+        result = import_beer_list(event, parsed)
+
+        assert (result.created, result.existing) == (0, 1)
+        assert event.beers.get().is_homebrew
+
+    def test_when_beer_exists_it_should_add_only_missing_links(self, event):
+        beer = Beer.objects.create(event=event, name="Underlig Jul")
+        beer.links.create(label="Untappd", url="https://untappd.com/b/1")
+        parsed = ParsedBeerList(
+            beers=[
+                ParsedBeer(
+                    "Underlig Jul",
+                    links=[
+                        ParsedLink("Untappd", "https://untappd.com/b/1"),
+                        ParsedLink("Vinmonopolet", "https://vinmonopolet.no/p/1"),
+                    ],
+                )
+            ]
+        )
+
+        import_beer_list(event, parsed)
+
+        assert sorted(beer.links.values_list("label", flat=True)) == [
+            "Untappd",
+            "Vinmonopolet",
+        ]
+
+    def test_when_not_replacing_it_should_keep_beers_missing_from_the_list(self, event):  # noqa: E501
+        Beer.objects.create(event=event, name="Julebokk")
+
+        import_beer_list(event, beer_list("Underlig Jul"))
+
+        assert beer_names(event) == ["Julebokk", "Underlig Jul"]
+
+    def test_when_replacing_it_should_remove_beers_missing_from_the_list(self, event):  # noqa: E501
+        Beer.objects.create(event=event, name="Julebokk")
+
+        result = import_beer_list(event, beer_list("Underlig Jul"), replace=True)
+
+        assert result.removed == 1
+        assert beer_names(event) == ["Underlig Jul"]
+
+    def test_when_replacing_it_should_keep_beers_used_in_the_answer_key(
+        self, event, user
+    ):  # noqa: E501
+        beer = Beer.objects.create(event=event, name="Julebokk")
+        answer_key = AnswerKey.objects.create(event=event, created_by=user)
+        AnswerKeyEntry.objects.create(answer_key=answer_key, beer_number=1, beer=beer)
+
+        result = import_beer_list(event, beer_list("Underlig Jul"), replace=True)
+
+        assert result.kept == ["Julebokk"]
+        assert beer_names(event) == ["Julebokk", "Underlig Jul"]
+
+    def test_when_importing_it_should_leave_other_events_alone(self, event, make_event):  # noqa: E501
+        other_event = make_event()
+        Beer.objects.create(event=other_event, name="Julebokk")
+
+        import_beer_list(event, beer_list("Underlig Jul"), replace=True)
+
+        assert beer_names(other_event) == ["Julebokk"]
+
+
+@pytest.fixture()
+def event(make_event):
+    return make_event()
+
+
+def beer_list(*names):
+    return ParsedBeerList(beers=[ParsedBeer(name) for name in names])
+
+
+def beer_names(event):
+    return sorted(event.beers.values_list("name", flat=True))
 
 
 def rows(*cells):

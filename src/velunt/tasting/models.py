@@ -140,6 +140,10 @@ class Beer(models.Model):
     def __str__(self):
         return self.name
 
+    @property
+    def is_in_answer_key(self):
+        return self.answer_key_entries.exists()
+
 
 class BeerLink(models.Model):
     beer = models.ForeignKey(
