@@ -9,32 +9,9 @@ from velunt.tasting.models import (
     AnswerKey,
     AnswerKeyEntry,
     Beer,
-    Event,
     Scorecard,
     ScorecardLine,
 )
-
-
-@pytest.fixture()
-def user(db):
-    from velunt.accounts.models import User
-
-    return User.objects.create_user(username="testuser", password="testpass")
-
-
-@pytest.fixture()
-def make_event(user):
-    def _make_event(**kwargs):
-        defaults = {
-            "owner": user,
-            "description": "Testsmak",
-            "event_date": datetime.date.today(),
-            "scoring_system": "juleol",
-        }
-        defaults.update(kwargs)
-        return Event.objects.create(**defaults)
-
-    return _make_event
 
 
 class TestEventState:

@@ -16,13 +16,6 @@ from velunt.tasting.results import compute_results
 
 
 @pytest.fixture()
-def user(db):
-    from velunt.accounts.models import User
-
-    return User.objects.create_user(username="testuser", password="testpass")
-
-
-@pytest.fixture()
 def closed_event(user):
     return Event.objects.create(
         owner=user,
