@@ -9,6 +9,7 @@ from velunt.tasting.models import Beer, Event
 
 LOCKED_MESSAGE = "Resultatene er publisert, så øllisten kan ikke lenger endres."
 NO_BEERS_MESSAGE = "Fant ingen øl i innlimingen, så ingenting ble endret."
+ERRORS_MESSAGE = "Innlimingen har feil, så ingenting ble endret. Se under."
 
 
 def host_beer_list(request, token):
@@ -37,12 +38,13 @@ def import_beers(request, token):
     text = request.POST.get("beer_list", "")
     replace = bool(request.POST.get("replace"))
     parsed = parse_beer_list(text)
-    if not parsed.beers:
+    import_error = _find_import_error(parsed)
+    if import_error:
         # Show the paste again, so the host can see what went wrong
         return _render_host_page(
             request,
             event,
-            import_error=NO_BEERS_MESSAGE,
+            import_error=import_error,
             beer_list_text=text,
             replace=replace,
             parsed=parsed,
@@ -70,6 +72,14 @@ def delete_beer(request, token, beer_id):
         "tasting/_host_beer_list.html",
         {"event": event, "beers": _get_beers(event), "error": error},
     )
+
+
+def _find_import_error(parsed):
+    if not parsed.beers:
+        return NO_BEERS_MESSAGE
+    if parsed.errors:
+        return ERRORS_MESSAGE
+    return None
 
 
 def _render_host_page(request, event, **import_form):

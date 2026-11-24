@@ -113,6 +113,26 @@ class TestParseBeerList:
         text = rows(["Nr", "Navn", "", "Pris"], ["1", "Underlig Jul", "x", "89,90"])
         assert parse_beer_list(text).ignored_columns == ["Nr", "Kolonne 3", "Pris"]
 
+    def test_when_values_fit_it_should_report_no_errors(self):
+        text = rows(["Navn", "Untappd"], ["Underlig Jul", "https://untappd.com/b/1"])
+        assert parse_beer_list(text).errors == []
+
+    def test_when_name_is_too_long_it_should_report_it(self):
+        text = rows(["Navn"], ["Jul" * 100])
+        assert "lengre enn 200 tegn" in parse_beer_list(text).errors[0]
+
+    def test_when_url_is_too_long_it_should_report_it(self):
+        text = rows(["Navn", "Untappd"], ["Underlig Jul", long_url()])
+        assert parse_beer_list(text).errors[0].startswith("Lenken")
+
+    def test_when_link_column_title_is_too_long_it_should_report_it_once(self):
+        text = rows(
+            ["Navn", "Lenke " * 20],
+            ["Underlig Jul", "https://untappd.com/b/1"],
+            ["Julebokk", "https://untappd.com/b/2"],
+        )
+        assert len(parse_beer_list(text).errors) == 1
+
     def test_when_beer_is_listed_twice_it_should_merge_into_one(self):
         text = rows(["Navn"], ["Underlig Jul"], ["Julebokk"], ["underlig jul"])
         assert names(parse_beer_list(text)) == ["Underlig Jul", "Julebokk"]
@@ -223,6 +243,14 @@ class TestImportBeerList:
         assert result.removed == 1
         assert beer_names(event) == ["Underlig Jul"]
 
+    def test_when_list_has_errors_it_should_refuse(self, event):
+        parsed = ParsedBeerList(beers=[ParsedBeer("Julebokk")], errors=["For langt"])
+
+        with pytest.raises(ValueError):
+            import_beer_list(event, parsed)
+
+        assert not event.beers.exists()
+
     def test_when_replacing_with_an_empty_list_it_should_refuse(self, event):
         Beer.objects.create(event=event, name="Julebokk")
 
@@ -263,6 +291,10 @@ def beer_list(*names):
 
 def beer_names(event):
     return sorted(event.beers.values_list("name", flat=True))
+
+
+def long_url():
+    return "https://untappd.com/b/" + "x" * 200
 
 
 def rows(*cells):

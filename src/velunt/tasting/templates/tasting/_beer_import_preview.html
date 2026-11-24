@@ -1,3 +1,11 @@
+{% if parsed.errors %}
+<div class="host-error">
+    <p><strong>Kan ikke importeres før dette er rettet:</strong></p>
+    <ul>
+        {% for error in parsed.errors %}<li>{{ error }}</li>{% endfor %}
+    </ul>
+</div>
+{% endif %}
 {% if parsed.beers %}
 <article>
     <header>

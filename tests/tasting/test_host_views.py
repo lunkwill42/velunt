@@ -96,6 +96,17 @@ class TestImportBeersView:
         assert "ingenting ble endret" in response.content.decode()
         assert list(event.beers.values_list("name", flat=True)) == ["Julebokk"]
 
+    def test_when_paste_has_too_long_values_it_should_import_nothing(
+        self, client, event
+    ):  # noqa: E501
+        pasted = "Navn\tUntappd\nUnderlig Jul\thttps://untappd.com/b/" + "x" * 200
+
+        response = client.post(host_url(event, "import/"), {"beer_list": pasted})
+
+        assert response.status_code == 200
+        assert "lengre enn 200 tegn" in response.content.decode()
+        assert not event.beers.exists()
+
     def test_when_paste_has_no_beers_it_should_keep_the_pasted_text(
         self, client, event
     ):  # noqa: E501

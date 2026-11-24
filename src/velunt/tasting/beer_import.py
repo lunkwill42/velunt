@@ -17,6 +17,9 @@ from velunt.tasting.models import Beer, BeerLink
 NAME_TITLES = {"navn", "ølnavn", "øl", "name", "beer"}
 HOMEBREW_TITLES = {"hjemmebrygg", "homebrew"}
 FALSE_VALUES = {"", "0", "-", "false", "no", "nei", "n"}
+NAME_MAX_LENGTH = Beer._meta.get_field("name").max_length
+LABEL_MAX_LENGTH = BeerLink._meta.get_field("label").max_length
+URL_MAX_LENGTH = BeerLink._meta.get_field("url").max_length
 KNOWN_LINK_LABELS = {
     "vinmonopolet.no": "Vinmonopolet",
     "untappd.com": "Untappd",
@@ -42,6 +45,7 @@ class ParsedBeer:
 class ParsedBeerList:
     beers: list[ParsedBeer] = field(default_factory=list)
     ignored_columns: list[str] = field(default_factory=list)
+    errors: list[str] = field(default_factory=list)
 
 
 @dataclass
@@ -70,9 +74,11 @@ def parse_beer_list(text):
     if columns.name is None:
         return ParsedBeerList(ignored_columns=columns.ignored)
     beers = [_parse_row(row, columns) for row in data_rows]
+    unique_beers = _merge_duplicates(beer for beer in beers if beer.name)
     return ParsedBeerList(
-        beers=_merge_duplicates(beer for beer in beers if beer.name),
+        beers=unique_beers,
         ignored_columns=columns.ignored,
+        errors=_find_errors(unique_beers),
     )
 
 
@@ -82,6 +88,8 @@ def import_beer_list(event, parsed, replace=False):
     With `replace`, beers missing from the parsed list are removed first. Beers
     used in the answer key are kept regardless, and reported in the result.
     """
+    if parsed.errors:
+        raise ValueError("Cannot import a beer list with errors")
     if replace and not parsed.beers:
         raise ValueError("Refusing to replace the beer list with an empty one")
     result = ImportResult()
@@ -205,6 +213,26 @@ def _merge_duplicates(beers):
         known_urls = {link.url for link in existing.links}
         existing.links += [link for link in beer.links if link.url not in known_urls]
     return list(merged.values())
+
+
+def _find_errors(beers):
+    """Describe values too long to store, so they can be fixed before importing"""
+    errors = (error for beer in beers for error in _beer_errors(beer))
+    return list(dict.fromkeys(errors))
+
+
+def _beer_errors(beer):
+    checks = [("Navnet", beer.name, NAME_MAX_LENGTH)]
+    for link in beer.links:
+        checks.append(("Kolonnetittelen", link.label, LABEL_MAX_LENGTH))
+        checks.append(("Lenken", link.url, URL_MAX_LENGTH))
+    for what, value, limit in checks:
+        if len(value) > limit:
+            yield f"{what} «{_shorten(value)}» er lengre enn {limit} tegn."
+
+
+def _shorten(value, length=40):
+    return value if len(value) <= length else value[:length] + "…"
 
 
 def _first_index(values, wanted, default):
