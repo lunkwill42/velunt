@@ -61,7 +61,7 @@ class Event(models.Model):
 
     @property
     def is_beer_list_locked(self):
-        """Whether results are out, so that only superusers may change the beers"""
+        """Whether results are out, so that the host link can no longer change beers"""
         if self.state != "closed":
             return False
         try:
