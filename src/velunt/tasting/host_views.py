@@ -8,19 +8,11 @@ from velunt.tasting.beer_import import import_beer_list, parse_beer_list
 from velunt.tasting.models import Beer, Event
 
 LOCKED_MESSAGE = "Resultatene er publisert, så øllisten kan ikke lenger endres."
+NO_BEERS_MESSAGE = "Fant ingen øl i innlimingen, så ingenting ble endret."
 
 
 def host_beer_list(request, token):
-    event = _get_event(token)
-    return render(
-        request,
-        "tasting/host_beer_list.html",
-        {
-            "event": event,
-            "beers": _get_beers(event),
-            "locked_message": LOCKED_MESSAGE,
-        },
-    )
+    return _render_host_page(request, _get_event(token))
 
 
 def preview_beer_import(request, token):
@@ -42,8 +34,21 @@ def import_beers(request, token):
         return HttpResponseNotAllowed(["POST"])
     if event.is_beer_list_locked:
         return HttpResponseForbidden(LOCKED_MESSAGE)
-    parsed = parse_beer_list(request.POST.get("beer_list", ""))
-    result = import_beer_list(event, parsed, replace=bool(request.POST.get("replace")))
+    text = request.POST.get("beer_list", "")
+    replace = bool(request.POST.get("replace"))
+    parsed = parse_beer_list(text)
+    if not parsed.beers:
+        # Show the paste again, so the host can see what went wrong
+        return _render_host_page(
+            request,
+            event,
+            import_error=NO_BEERS_MESSAGE,
+            beer_list_text=text,
+            replace=replace,
+            parsed=parsed,
+            has_input=bool(text.strip()),
+        )
+    result = import_beer_list(event, parsed, replace=replace)
     messages.success(request, _describe_import(result))
     return redirect("tasting:host_beer_list", token=token)
 
@@ -65,6 +70,16 @@ def delete_beer(request, token, beer_id):
         "tasting/_host_beer_list.html",
         {"event": event, "beers": _get_beers(event), "error": error},
     )
+
+
+def _render_host_page(request, event, **import_form):
+    context = {
+        "event": event,
+        "beers": _get_beers(event),
+        "locked_message": LOCKED_MESSAGE,
+        **import_form,
+    }
+    return render(request, "tasting/host_beer_list.html", context)
 
 
 def _get_event(token):

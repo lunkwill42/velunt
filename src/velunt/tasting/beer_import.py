@@ -82,6 +82,8 @@ def import_beer_list(event, parsed, replace=False):
     With `replace`, beers missing from the parsed list are removed first. Beers
     used in the answer key are kept regardless, and reported in the result.
     """
+    if replace and not parsed.beers:
+        raise ValueError("Refusing to replace the beer list with an empty one")
     result = ImportResult()
     with transaction.atomic():
         if replace:

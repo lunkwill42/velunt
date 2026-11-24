@@ -83,6 +83,26 @@ class TestImportBeersView:
 
         assert event.beers.count() == 2
 
+    @pytest.mark.parametrize("pasted", ["", "Navn\tHjemmebrygg"])
+    def test_when_paste_has_no_beers_it_should_not_replace_the_list(
+        self, client, event, pasted
+    ):  # noqa: E501
+        Beer.objects.create(event=event, name="Julebokk")
+
+        response = client.post(
+            host_url(event, "import/"), {"beer_list": pasted, "replace": "on"}
+        )
+
+        assert "ingenting ble endret" in response.content.decode()
+        assert list(event.beers.values_list("name", flat=True)) == ["Julebokk"]
+
+    def test_when_paste_has_no_beers_it_should_keep_the_pasted_text(
+        self, client, event
+    ):  # noqa: E501
+        response = client.post(host_url(event, "import/"), {"beer_list": "Navn"})
+
+        assert ">Navn</textarea>" in response.content.decode()
+
     def test_when_using_get_it_should_return_405(self, client, event):
         response = client.get(host_url(event, "import/"))
         assert response.status_code == 405

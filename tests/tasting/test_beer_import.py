@@ -223,6 +223,14 @@ class TestImportBeerList:
         assert result.removed == 1
         assert beer_names(event) == ["Underlig Jul"]
 
+    def test_when_replacing_with_an_empty_list_it_should_refuse(self, event):
+        Beer.objects.create(event=event, name="Julebokk")
+
+        with pytest.raises(ValueError):
+            import_beer_list(event, ParsedBeerList(), replace=True)
+
+        assert beer_names(event) == ["Julebokk"]
+
     def test_when_replacing_it_should_keep_beers_used_in_the_answer_key(
         self, event, user
     ):  # noqa: E501

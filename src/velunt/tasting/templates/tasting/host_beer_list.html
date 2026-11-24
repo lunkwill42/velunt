@@ -134,19 +134,25 @@
                 </p>
             </div>
         </details>
+        {% if import_error %}
+        <p class="host-error">{{ import_error }}</p>
+        {% endif %}
         <form method="post" action="{% url 'tasting:import_beers' event.host_token %}">
             {% csrf_token %}
             <label for="beer-list-input">Rader fra regnearket</label>
             <textarea id="beer-list-input"
                       name="beer_list"
                       rows="6"
+                      required
                       hx-post="{% url 'tasting:preview_beer_import' event.host_token %}"
                       hx-trigger="input changed delay:400ms, restored"
                       hx-target="#import-preview"
-                      ></textarea>
-            <div id="import-preview"></div>
+                      >{{ beer_list_text }}</textarea>
+            <div id="import-preview">
+                {% if parsed %}{% include "tasting/_beer_import_preview.html" %}{% endif %}
+            </div>
             <label>
-                <input type="checkbox" name="replace" role="switch">
+                <input type="checkbox" name="replace" role="switch"{% if replace %} checked{% endif %}>
                 Erstatt hele listen (øl som ikke er med i innlimingen, fjernes)
             </label>
             <button type="submit">Importer</button>
