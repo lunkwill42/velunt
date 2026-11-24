@@ -87,18 +87,7 @@ def import_beer_list(event, parsed, replace=False):
             _remove_beers_not_in(event, parsed, result)
         beers_by_name = {beer.name.casefold(): beer for beer in event.beers.all()}
         for parsed_beer in parsed.beers:
-            beer = beers_by_name.get(parsed_beer.name.casefold())
-            if beer:
-                beer.is_homebrew = parsed_beer.is_homebrew
-                beer.save(update_fields=["is_homebrew"])
-                result.existing += 1
-            else:
-                beer = Beer.objects.create(
-                    event=event,
-                    name=parsed_beer.name,
-                    is_homebrew=parsed_beer.is_homebrew,
-                )
-                result.created += 1
+            beer = _import_beer(event, parsed_beer, beers_by_name, result)
             _add_missing_links(beer, parsed_beer.links)
     return result
 
@@ -127,6 +116,21 @@ def _remove_beers_not_in(event, parsed, result):
             continue
         beer.delete()
         result.removed += 1
+
+
+def _import_beer(event, parsed_beer, beers_by_name, result):
+    beer = beers_by_name.get(parsed_beer.name.casefold())
+    if beer is None:
+        result.created += 1
+        return Beer.objects.create(
+            event=event,
+            name=parsed_beer.name,
+            is_homebrew=parsed_beer.is_homebrew,
+        )
+    result.existing += 1
+    beer.is_homebrew = parsed_beer.is_homebrew
+    beer.save(update_fields=["is_homebrew"])
+    return beer
 
 
 def _add_missing_links(beer, links):
