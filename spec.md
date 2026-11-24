@@ -43,8 +43,9 @@ AUTH_USER_MODEL = "accounts.User"
 | event_date     | DateField         | Expected date of the tasting                                                                      |
 | closed_at      | DateTimeField     | Null = not yet closed. Set when the organizer closes the event.                                   |
 | scoring_system | CharField         | Key identifying the scoring system, e.g. `"juleol"`, `"simple_untappd"`. Choices defined in code. |
+| host_token     | CharField(unique) | Null until an organizer creates a host link. Secret part of the host page URL.                   |
 
-- `public_id` is used in all URLs. The internal `id` is never exposed to users.
+- `public_id` is used in all public URLs. The host page uses `host_token` instead, since that link grants write access. The internal `id` is never exposed to users.
 - Organizers manage events via Django admin. The admin detail page should include a permalink to the public event page.
 
 #### Event states
