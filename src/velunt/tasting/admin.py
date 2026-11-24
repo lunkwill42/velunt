@@ -1,5 +1,6 @@
 from django import forms
 from django.contrib import admin
+from django.forms.models import BaseInlineFormSet
 from django.urls import reverse
 from django.utils.html import format_html
 
@@ -126,11 +127,17 @@ class EventAdmin(admin.ModelAdmin):
         self.message_user(request, f"{count} poenglinjer beregnet på nytt.")
 
 
+class AnswerKeyEntryFormSet(BaseInlineFormSet):
+    def add_fields(self, form, index):
+        super().add_fields(form, index)
+        form.fields["beer"].queryset = self.instance.event.beers.all()
+
+
 class AnswerKeyEntryInline(admin.TabularInline):
     model = AnswerKeyEntry
+    formset = AnswerKeyEntryFormSet
     extra = 1
     fields = ["beer_number", "beer"]
-    autocomplete_fields = ["beer"]
 
 
 @admin.register(AnswerKey)
@@ -139,6 +146,12 @@ class AnswerKeyAdmin(admin.ModelAdmin):
     readonly_fields = ["created_by", "created_at"]
     fields = ["event", "published_at", "created_by", "created_at"]
     inlines = [AnswerKeyEntryInline]
+
+    def get_inlines(self, request, obj):
+        # Entries can only offer the event's beers once the event is known
+        if obj is None:
+            return []
+        return super().get_inlines(request, obj)
 
     @admin.display(description="Publisert", boolean=True)
     def is_published_display(self, obj):
