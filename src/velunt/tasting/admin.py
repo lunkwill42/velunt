@@ -147,6 +147,13 @@ class AnswerKeyAdmin(admin.ModelAdmin):
     fields = ["event", "published_at", "created_by", "created_at"]
     inlines = [AnswerKeyEntryInline]
 
+    def get_readonly_fields(self, request, obj=None):
+        readonly = super().get_readonly_fields(request, obj)
+        if obj is None:
+            return readonly
+        # The entries point at beers belonging to this event
+        return [*readonly, "event"]
+
     def get_inlines(self, request, obj):
         # Entries can only offer the event's beers once the event is known
         if obj is None:

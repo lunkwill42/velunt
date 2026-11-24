@@ -40,6 +40,19 @@ class TestAnswerKeyChangePage:
         assert response.status_code == 302
         assert answer_key.entries.get().beer == beer
 
+    def test_when_editing_it_should_not_allow_changing_the_event(
+        self, admin_client, answer_key, make_event
+    ):  # noqa: E501
+        original_event = answer_key.event
+        data = entry_form_data(answer_key, None)
+        data["event"] = make_event().pk
+
+        response = admin_client.post(change_url(answer_key), data)
+
+        assert response.status_code == 302
+        answer_key.refresh_from_db()
+        assert answer_key.event == original_event
+
 
 class TestAnswerKeyAddPage:
     def test_when_adding_an_answer_key_it_should_not_offer_entries_yet(
@@ -67,12 +80,12 @@ def entry_form_data(answer_key, beer):
         "event": answer_key.event.pk,
         "published_at_0": "",
         "published_at_1": "",
-        "entries-TOTAL_FORMS": "1",
+        "entries-TOTAL_FORMS": "1" if beer else "0",
         "entries-INITIAL_FORMS": "0",
         "entries-MIN_NUM_FORMS": "0",
         "entries-MAX_NUM_FORMS": "1000",
         "entries-0-beer_number": "1",
-        "entries-0-beer": beer.pk,
+        "entries-0-beer": beer.pk if beer else "",
     }
 
 
