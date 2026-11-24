@@ -33,7 +33,8 @@ class ParsedLink:
 @dataclass
 class ParsedBeer:
     name: str
-    is_homebrew: bool = False
+    # None when the list has no homebrew column, so existing flags are kept
+    is_homebrew: bool | None = None
     links: list[ParsedLink] = field(default_factory=list)
 
 
@@ -125,11 +126,12 @@ def _import_beer(event, parsed_beer, beers_by_name, result):
         return Beer.objects.create(
             event=event,
             name=parsed_beer.name,
-            is_homebrew=parsed_beer.is_homebrew,
+            is_homebrew=bool(parsed_beer.is_homebrew),
         )
     result.existing += 1
-    beer.is_homebrew = parsed_beer.is_homebrew
-    beer.save(update_fields=["is_homebrew"])
+    if parsed_beer.is_homebrew is not None:
+        beer.is_homebrew = parsed_beer.is_homebrew
+        beer.save(update_fields=["is_homebrew"])
     return beer
 
 

@@ -57,9 +57,9 @@ class TestParseBeerList:
         beers = parse_beer_list(text).beers
         assert [beer.is_homebrew for beer in beers] == [False, True]
 
-    def test_when_homebrew_column_is_missing_it_should_mark_no_homebrews(self):
+    def test_when_homebrew_column_is_missing_it_should_leave_homebrew_unknown(self):
         text = rows(["Navn"], ["Underlig Jul"])
-        assert not parse_beer_list(text).beers[0].is_homebrew
+        assert parse_beer_list(text).beers[0].is_homebrew is None
 
     def test_when_homebrew_column_comes_first_it_should_use_next_column_for_names(
         self,
@@ -172,6 +172,19 @@ class TestImportBeerList:
 
         assert (result.created, result.existing) == (0, 1)
         assert event.beers.get().is_homebrew
+
+    def test_when_list_has_no_homebrew_column_it_should_keep_existing_flags(
+        self, event
+    ):  # noqa: E501
+        Beer.objects.create(event=event, name="Vegards Jul", is_homebrew=True)
+
+        import_beer_list(event, beer_list("Vegards Jul"))
+
+        assert event.beers.get().is_homebrew
+
+    def test_when_list_has_no_homebrew_column_it_should_create_plain_beers(self, event):  # noqa: E501
+        import_beer_list(event, beer_list("Underlig Jul"))
+        assert event.beers.get().is_homebrew is False
 
     def test_when_beer_exists_it_should_add_only_missing_links(self, event):
         beer = Beer.objects.create(event=event, name="Underlig Jul")
