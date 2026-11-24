@@ -68,6 +68,10 @@ class TestParseBeerList:
         beer = parse_beer_list(text).beers[0]
         assert (beer.name, beer.is_homebrew) == ("Vegards Jul", True)
 
+    def test_when_only_a_homebrew_column_is_given_it_should_find_no_beers(self):
+        text = rows(["Hjemmebrygg"], ["ja"])
+        assert parse_beer_list(text).beers == []
+
     def test_when_column_contains_urls_it_should_label_links_with_its_title(self):
         text = rows(
             ["Navn", "Polet"],

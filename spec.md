@@ -319,7 +319,7 @@ Follow the conventions from NAV's contributor checklist (based on https://cbea.m
 
 ### Implemented after MVP
 
-- **Host page for the beer list:** Organizers create a secret host link with a button on the event page in the admin. Making a new link invalidates any earlier one. Through the link, the host pastes tab-separated rows from a spreadsheet, sees a preview, and imports them. The first row holds column titles: a «Navn» column (otherwise the first column), an optional «Hjemmebrygg» column, and any columns containing URLs, which become beer links labelled by the column title. Beers already on the list are updated rather than duplicated. The host can choose to replace the whole list, and can remove single beers. Beers used in the answer key are never removed. Once the event is closed and its answer key published, the list is locked for the host.
+- **Host page for the beer list:** Organizers create a secret host link with a button on the event page in the admin. Making a new link invalidates any earlier one. Through the link, the host pastes tab-separated rows from a spreadsheet, sees a preview, and imports them. The first row holds column titles: a «Navn» column (otherwise the first column not titled «Hjemmebrygg»), an optional «Hjemmebrygg» column, and any columns containing URLs, which become beer links labelled by the column title. Beers already on the list are updated rather than duplicated. The host can choose to replace the whole list, and can remove single beers. Beers used in the answer key are never removed. Once the event is closed and its answer key published, the list is locked for the host.
 
 ### Post-MVP (Priority 2)
 

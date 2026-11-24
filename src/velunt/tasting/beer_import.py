@@ -2,9 +2,9 @@
 
 Copying cells from a spreadsheet yields one line per row, with cells separated by
 tabs. The first row holds column titles, unless it already contains a URL. The
-name column is the one titled like "Navn", otherwise the first column. A column
-titled "Hjemmebrygg" marks homebrews, and any other column containing URLs holds
-links whose label is the column title.
+name column is the one titled like "Navn", otherwise the first column that is not
+titled "Hjemmebrygg". That column marks homebrews, and any other column containing
+URLs holds links whose label is the column title.
 """
 
 from dataclasses import dataclass, field
@@ -53,7 +53,7 @@ class ImportResult:
 
 @dataclass
 class Columns:
-    name: int
+    name: int | None
     homebrew: int | None
     links: dict[int, str]
     ignored: list[str]
@@ -66,6 +66,8 @@ def parse_beer_list(text):
         return ParsedBeerList()
     titles, data_rows = _split_titles(rows)
     columns = _classify_columns(titles, data_rows)
+    if columns.name is None:
+        return ParsedBeerList(ignored_columns=columns.ignored)
     beers = [_parse_row(row, columns) for row in data_rows]
     return ParsedBeerList(
         beers=_merge_duplicates(beer for beer in beers if beer.name),
@@ -152,7 +154,7 @@ def _split_titles(rows):
 def _classify_columns(titles, data_rows):
     normalized = [title.casefold() for title in titles]
     homebrew = _first_index(normalized, HOMEBREW_TITLES, default=None)
-    name = _first_index(normalized, NAME_TITLES, default=1 if homebrew == 0 else 0)
+    name = _find_name_column(normalized, homebrew)
     links = {}
     ignored = []
     for index, title in enumerate(titles):
@@ -163,6 +165,14 @@ def _classify_columns(titles, data_rows):
         else:
             ignored.append(title or f"Kolonne {index + 1}")
     return Columns(name=name, homebrew=homebrew, links=links, ignored=ignored)
+
+
+def _find_name_column(normalized_titles, homebrew):
+    titled = _first_index(normalized_titles, NAME_TITLES, default=None)
+    if titled is not None:
+        return titled
+    untitled = (i for i in range(len(normalized_titles)) if i != homebrew)
+    return next(untitled, None)
 
 
 def _parse_row(row, columns):
