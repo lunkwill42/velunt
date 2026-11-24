@@ -128,9 +128,13 @@ class EventAdmin(admin.ModelAdmin):
 
 
 class AnswerKeyEntryFormSet(BaseInlineFormSet):
+    def __init__(self, *args, event=None, **kwargs):
+        self.event = event
+        super().__init__(*args, **kwargs)
+
     def add_fields(self, form, index):
         super().add_fields(form, index)
-        form.fields["beer"].queryset = self.instance.event.beers.all()
+        form.fields["beer"].queryset = Beer.objects.filter(event=self.event)
 
 
 class AnswerKeyEntryInline(admin.TabularInline):
@@ -156,9 +160,22 @@ class AnswerKeyAdmin(admin.ModelAdmin):
 
     def get_inlines(self, request, obj):
         # Entries can only offer the event's beers once the event is known
-        if obj is None:
+        if self._get_event(request, obj) is None:
             return []
         return super().get_inlines(request, obj)
+
+    def get_formset_kwargs(self, request, obj, inline, prefix):
+        kwargs = super().get_formset_kwargs(request, obj, inline, prefix)
+        kwargs["event"] = self._get_event(request, obj)
+        return kwargs
+
+    def formfield_for_foreignkey(self, db_field, request, **kwargs):
+        if db_field.name == "event":
+            event = self._get_event_from_query(request)
+            if event is not None:
+                # Choosing another event would contradict the beers offered
+                kwargs["queryset"] = Event.objects.filter(pk=event.pk)
+        return super().formfield_for_foreignkey(db_field, request, **kwargs)
 
     @admin.display(description="Publisert", boolean=True)
     def is_published_display(self, obj):
@@ -168,6 +185,19 @@ class AnswerKeyAdmin(admin.ModelAdmin):
         if not change:
             obj.created_by = request.user
         super().save_model(request, obj, form, change)
+
+    def _get_event(self, request, obj):
+        """The answer key's event, or the one the add page was opened for"""
+        if obj is not None and obj.pk:
+            return obj.event
+        return self._get_event_from_query(request)
+
+    def _get_event_from_query(self, request):
+        event_id = self.get_changeform_initial_data(request).get("event", "")
+        try:
+            return Event.objects.filter(pk=int(event_id)).first()
+        except ValueError:
+            return None
 
 
 @admin.register(Beer)
