@@ -2,6 +2,7 @@ import datetime
 from decimal import Decimal
 
 import pytest
+from django.core.exceptions import ValidationError
 from django.db import IntegrityError
 from django.utils import timezone
 
@@ -168,6 +169,35 @@ class TestAnswerKey:
 
 
 class TestAnswerKeyEntry:
+    def test_when_beer_belongs_to_another_event_clean_should_reject_it(
+        self, make_event, user
+    ):  # noqa: E501
+        ak = AnswerKey.objects.create(event=make_event(), created_by=user)
+        other_beer = Beer.objects.create(event=make_event(), name="Julebokk")
+        entry = AnswerKeyEntry(answer_key=ak, beer_number=1, beer=other_beer)
+
+        with pytest.raises(ValidationError) as excinfo:
+            entry.clean()
+
+        assert "beer" in excinfo.value.message_dict
+
+    def test_when_beer_belongs_to_the_same_event_clean_should_accept_it(
+        self, make_event, user
+    ):  # noqa: E501
+        event = make_event()
+        ak = AnswerKey.objects.create(event=event, created_by=user)
+        beer = Beer.objects.create(event=event, name="Julebokk")
+
+        AnswerKeyEntry(answer_key=ak, beer_number=1, beer=beer).clean()
+
+    def test_when_answer_key_has_no_event_yet_clean_should_not_blame_the_beer(
+        self, make_event
+    ):  # noqa: E501
+        beer = Beer.objects.create(event=make_event(), name="Julebokk")
+        entry = AnswerKeyEntry(answer_key=AnswerKey(), beer_number=1, beer=beer)
+
+        entry.clean()
+
     def test_when_same_beer_number_twice_it_should_raise(self, make_event, user):
         event = make_event()
         ak = AnswerKey.objects.create(event=event, created_by=user)

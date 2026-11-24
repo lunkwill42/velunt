@@ -1,4 +1,5 @@
 from django.conf import settings
+from django.core.exceptions import ValidationError
 from django.db import models
 from django.urls import reverse
 from django.utils import timezone
@@ -211,3 +212,11 @@ class AnswerKeyEntry(models.Model):
 
     def __str__(self):
         return f"#{self.beer_number}: {self.beer.name}"
+
+    def clean(self):
+        # Before the answer key is first saved, only the object is set, not its id
+        answer_key = getattr(self, "answer_key", None)
+        if self.beer_id is None or answer_key is None or answer_key.event_id is None:
+            return
+        if self.beer.event_id != answer_key.event_id:
+            raise ValidationError({"beer": "Ølet hører til et annet arrangement."})
