@@ -38,6 +38,15 @@ class AnswerKeyRow:
     def is_on_all_scorecards(self):
         return len(self.judge_names) >= self.total_judges
 
+    @property
+    def has_notes(self):
+        return bool(
+            self.error
+            or not self.judge_names
+            or not self.is_on_all_scorecards
+            or self.sibling_numbers
+        )
+
 
 @dataclass
 class AnswerKeyEdit:

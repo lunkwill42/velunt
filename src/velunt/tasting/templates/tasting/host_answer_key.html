@@ -26,8 +26,10 @@
     .answer-row input {
         margin-bottom: 0;
     }
-    .answer-row small {
+    .answer-row .row-notes {
         grid-column: 2;
+    }
+    .answer-row small {
         display: block;
         margin-top: 0.25rem;
     }
@@ -82,9 +84,12 @@
                        autocapitalize="none"
                        spellcheck="false"
                        {% if row.beer_number == edit.first_error_number %}autofocus{% endif %}
-                       {% if row.error %}aria-invalid="true" aria-describedby="{{ row.field_name }}-error"{% endif %}>
+                       {% if row.has_notes %}aria-describedby="{{ row.field_name }}-notes"{% endif %}
+                       {% if row.error %}aria-invalid="true"{% endif %}>
+                {% if row.has_notes %}
+                <div id="{{ row.field_name }}-notes" class="row-notes">
                 {% if row.error %}
-                <small id="{{ row.field_name }}-error" class="row-warning">{{ row.error }}</small>
+                <small class="row-warning">{{ row.error }}</small>
                 {% endif %}
                 {% if not row.judge_names %}
                 <small class="row-warning">Ingen dommerskjema har dette nummeret.</small>
@@ -95,6 +100,8 @@
                 {% endif %}
                 {% if row.sibling_numbers %}
                 <small>Samme øl som {% for number in row.sibling_numbers %}#{{ number }}{% if not forloop.last %}, {% endif %}{% endfor %}.</small>
+                {% endif %}
+                </div>
                 {% endif %}
             </div>
             {% endfor %}
