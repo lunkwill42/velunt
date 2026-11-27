@@ -1,4 +1,4 @@
-"""Views for event hosts, who manage the beer list through a secret link"""
+"""Views for event hosts, who manage beers and answer key through a secret link"""
 
 from django.contrib import messages
 from django.http import HttpResponseForbidden, HttpResponseNotAllowed

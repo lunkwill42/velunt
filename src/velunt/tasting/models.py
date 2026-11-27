@@ -29,7 +29,7 @@ class Event(models.Model):
         max_length=50,
         choices=SCORING_SYSTEM_CHOICES,
     )
-    # Secret part of the link that lets the host manage the beer list
+    # Secret part of the link that lets the host manage beers and answer key
     host_token = models.CharField(
         "vertskapsnøkkel",
         max_length=32,
@@ -61,7 +61,7 @@ class Event(models.Model):
 
     @property
     def is_locked_for_host(self):
-        """Whether results are out, so that the host link can no longer change beers"""
+        """Whether results are out, so the host link can no longer change anything"""
         if self.state != "closed":
             return False
         try:
