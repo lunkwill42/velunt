@@ -78,6 +78,9 @@
                        value="{{ row.beer_name }}"
                        list="beer-names"
                        autocomplete="off"
+                       autocorrect="off"
+                       autocapitalize="none"
+                       spellcheck="false"
                        {% if row.error %}aria-invalid="true" aria-describedby="{{ row.field_name }}-error"{% endif %}>
                 {% if row.error %}
                 <small id="{{ row.field_name }}-error" class="row-warning">{{ row.error }}</small>
