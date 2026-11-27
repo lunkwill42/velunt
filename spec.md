@@ -94,7 +94,7 @@ An organizer can **re-open** a closed event by clearing `closed_at` (setting it 
 |--------------|------------------|-----------------------------------------------------------------------------------------|
 | id           | AutoField        |                                                                                         |
 | event        | OneToOne → Event |                                                                                         |
-| created_by   | FK → User        | The Django user who entered the answer key                                              |
+| created_by   | FK → User        | The Django user who entered the answer key, or the event owner when a host created it   |
 | created_at   | DateTimeField    |                                                                                         |
 | published_at | DateTimeField    | Null = draft. When set, the answer key becomes visible after this timestamp has passed. |
 
@@ -117,7 +117,7 @@ An organizer can **re-open** a closed event by clearing `closed_at` (setting it 
 | url         | URLField       | Optional — link to Vinmonopolet, Untappd, etc. |
 
 - MVP: one URL per entry. Post-MVP: multiple URLs with labels.
-- Answer key is entered manually via Django admin (one beer at a time).
+- Answer key is entered via Django admin, or on the host page (see "Implemented after MVP").
 
 ## ID Scheme
 
@@ -321,13 +321,13 @@ Follow the conventions from NAV's contributor checklist (based on https://cbea.m
 ### Implemented after MVP
 
 - **Host page for the beer list:** Organizers create a secret host link with a button on the event page in the admin. Making a new link invalidates any earlier one. Through the link, the host pastes tab-separated rows from a spreadsheet, sees a preview, and imports them. The first row holds column titles: a «Navn» column (otherwise the first column not titled «Hjemmebrygg»), an optional «Hjemmebrygg» column, and any columns containing URLs, which become beer links labelled by the column title. Beers already on the list are updated rather than duplicated. The host can choose to replace the whole list, and can remove single beers. Beers used in the answer key are never removed. Once the event is closed and its answer key published, the list is locked for the host.
+- **Host page for the answer key:** Through the same secret link, the host gets one row per beer number found on any scorecard, plus numbers already in the answer key. Each row takes a beer name, with suggestions from the beer list that contain what is typed. A row left empty gets no entry, so numbers a judge made up by mistake can be skipped. Rows show when fewer than half the judges who scored anything used a number, naming those judges, and which other numbers share the same beer. Nothing is saved if a name is not on the beer list. Beers without a number are listed below the rows. The answer key is locked for the host along with the beer list.
 
 ### Post-MVP (Priority 2)
 
 - Judge statistics: most/least generous scorer, average scores.
 - Control beer variance analysis (how consistent each judge's scores were across duplicate servings of the same beer).
 - Custom organizer pages (outside Django admin) for managing events and answer key.
-- Secret URL for answer key entry (so a non-admin can enter it).
 - Email/copy scorecard URL to judge.
 - Homebrew filter toggle on the results page (show only homebrews).
 - English translation.
