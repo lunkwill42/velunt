@@ -81,6 +81,7 @@
                        autocorrect="off"
                        autocapitalize="none"
                        spellcheck="false"
+                       {% if row.beer_number == edit.first_error_number %}autofocus{% endif %}
                        {% if row.error %}aria-invalid="true" aria-describedby="{{ row.field_name }}-error"{% endif %}>
                 {% if row.error %}
                 <small id="{{ row.field_name }}-error" class="row-warning">{{ row.error }}</small>

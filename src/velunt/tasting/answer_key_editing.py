@@ -47,6 +47,11 @@ class AnswerKeyEdit:
     def has_errors(self):
         return any(row.error for row in self.rows)
 
+    @property
+    def first_error_number(self):
+        """The beer number to focus after a rejected save"""
+        return next((row.beer_number for row in self.rows if row.error), None)
+
 
 def get_answer_key_edit(event, data=None):
     """Build the rows from the saved answer key, or from posted `data`"""

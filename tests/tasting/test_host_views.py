@@ -269,6 +269,19 @@ class TestHostAnswerKeyView:
         assert "Fant ikke «Raudt» på øllisten." in response.content.decode()
         assert not AnswerKey.objects.filter(event=event).exists()
 
+    def test_when_beers_are_unknown_it_should_focus_the_first_of_them(
+        self, client, event
+    ):  # noqa: E501
+        add_scorecard(event, "Ola", [1, 2, 3])
+        Beer.objects.create(event=event, name="Underlig Jul")
+
+        response = client.post(
+            answer_key_url(event),
+            {"beer_1": "Underlig Jul", "beer_2": "Raudt", "beer_3": "Kinn"},
+        )
+
+        assert response.context["edit"].first_error_number == 2
+
     def test_when_number_is_cleared_it_should_remove_its_entry(self, client, event):
         add_scorecard(event, "Ola", [1])
         beer = Beer.objects.create(event=event, name="Underlig Jul")
