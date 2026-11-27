@@ -270,6 +270,51 @@ class TestHostAnswerKeyView:
         assert "Fant ikke «Raudt» på øllisten." in response.content.decode()
         assert not AnswerKey.objects.filter(event=event).exists()
 
+    def test_when_a_beer_is_unknown_it_should_keep_the_saved_answer_key(
+        self, client, event
+    ):  # noqa: E501
+        add_scorecard(event, "Ola", [1, 2])
+        beer = Beer.objects.create(event=event, name="Underlig Jul")
+        add_answer_key_entry(event, 1, beer)
+
+        client.post(answer_key_url(event), {"beer_1": "", "beer_2": "Raudt"})
+
+        assert answer_key_map(event) == {1: beer}
+
+    def test_when_beer_is_on_several_numbers_it_should_name_the_others(
+        self, client, event
+    ):  # noqa: E501
+        add_scorecard(event, "Ola", [1, 2, 3])
+        beer = Beer.objects.create(event=event, name="Underlig Jul")
+        for number in (1, 3):
+            add_answer_key_entry(event, number, beer)
+
+        content = client.get(answer_key_url(event)).content.decode()
+
+        assert "Samme øl som #3." in content
+        assert "Samme øl som #1." in content
+
+    def test_when_other_events_have_scorecards_it_should_not_list_their_numbers(
+        self, client, event, make_event
+    ):  # noqa: E501
+        add_scorecard(event, "Ola", [1])
+        add_scorecard(make_event(description="Annen smak"), "Kari", [2])
+
+        rows = client.get(answer_key_url(event)).context["edit"].rows
+
+        assert [row.beer_number for row in rows] == [1]
+
+    def test_when_beer_belongs_to_another_event_it_should_reject_it(
+        self, client, event, make_event
+    ):  # noqa: E501
+        add_scorecard(event, "Ola", [1])
+        Beer.objects.create(event=make_event(), name="Underlig Jul")
+
+        response = client.post(answer_key_url(event), {"beer_1": "Underlig Jul"})
+
+        assert response.status_code == 422
+        assert answer_key_map(event) == {}
+
     def test_when_beers_are_unknown_it_should_focus_the_first_of_them(
         self, client, event
     ):  # noqa: E501
@@ -286,8 +331,7 @@ class TestHostAnswerKeyView:
     def test_when_number_is_cleared_it_should_remove_its_entry(self, client, event):
         add_scorecard(event, "Ola", [1])
         beer = Beer.objects.create(event=event, name="Underlig Jul")
-        answer_key = AnswerKey.objects.create(event=event, created_by=event.owner)
-        AnswerKeyEntry.objects.create(answer_key=answer_key, beer_number=1, beer=beer)
+        add_answer_key_entry(event, 1, beer)
 
         client.post(answer_key_url(event), {"beer_1": ""})
 
@@ -297,8 +341,7 @@ class TestHostAnswerKeyView:
         self, client, event
     ):  # noqa: E501
         beer = Beer.objects.create(event=event, name="Underlig Jul")
-        answer_key = AnswerKey.objects.create(event=event, created_by=event.owner)
-        AnswerKeyEntry.objects.create(answer_key=answer_key, beer_number=7, beer=beer)
+        add_answer_key_entry(event, 7, beer)
 
         rows = client.get(answer_key_url(event)).context["edit"].rows
 
@@ -316,6 +359,16 @@ class TestHostAnswerKeyView:
         assert [beer.name for beer in response.context["unnumbered_beers"]] == [
             "Underlig Jul"
         ]
+
+    def test_when_locked_it_should_show_why_and_disable_the_form(
+        self, client, locked_event
+    ):  # noqa: E501
+        add_scorecard(locked_event, "Ola", [1])
+
+        content = client.get(answer_key_url(locked_event)).content.decode()
+
+        assert "fasiten kan ikke endres her" in content
+        assert "<fieldset disabled>" in content
 
     def test_when_locked_it_should_refuse_saving(self, client, locked_event):
         add_scorecard(locked_event, "Ola", [1])
@@ -352,6 +405,13 @@ def add_scorecard(event, judge_name, beer_numbers):
     scorecard = Scorecard.objects.create(event=event, judge_name=judge_name)
     for beer_number in beer_numbers:
         scorecard.lines.create(beer_number=beer_number)
+
+
+def add_answer_key_entry(event, beer_number, beer):
+    answer_key, _ = AnswerKey.objects.get_or_create(
+        event=event, defaults={"created_by": event.owner}
+    )
+    answer_key.entries.create(beer_number=beer_number, beer=beer)
 
 
 def answer_key_map(event):
