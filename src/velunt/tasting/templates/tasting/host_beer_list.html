@@ -82,6 +82,8 @@
         {% include "tasting/_calendar_icon.html" with date=event.event_date %}
     </header>
 
+    <p><a href="{% url 'tasting:host_answer_key' event.host_token %}">Legg inn fasit</a></p>
+
     {% for message in messages %}
         <p class="host-message">{{ message }}</p>
     {% endfor %}
