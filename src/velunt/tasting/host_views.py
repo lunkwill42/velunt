@@ -42,7 +42,7 @@ def import_beers(request, token):
     event = _get_event(token)
     if request.method != "POST":
         return HttpResponseNotAllowed(["POST"])
-    if event.is_beer_list_locked:
+    if event.is_locked_for_host:
         return HttpResponseForbidden(LOCKED_MESSAGE)
     text = request.POST.get("beer_list", "")
     replace = bool(request.POST.get("replace"))
@@ -68,7 +68,7 @@ def delete_beer(request, token, beer_id):
     event = _get_event(token)
     if request.method != "DELETE":
         return HttpResponseNotAllowed(["DELETE"])
-    if event.is_beer_list_locked:
+    if event.is_locked_for_host:
         return HttpResponseForbidden(LOCKED_MESSAGE)
     beer = get_object_or_404(Beer, pk=beer_id, event=event)
     error = None
@@ -89,7 +89,7 @@ def host_answer_key(request, token):
         return _render_answer_key_page(request, event, get_answer_key_edit(event))
     if request.method != "POST":
         return HttpResponseNotAllowed(["GET", "POST"])
-    if event.is_beer_list_locked:
+    if event.is_locked_for_host:
         return HttpResponseForbidden(ANSWER_KEY_LOCKED_MESSAGE)
     edit = get_answer_key_edit(event, request.POST)
     if edit.has_errors:

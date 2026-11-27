@@ -224,26 +224,26 @@ class TestAnswerKeyEntry:
         assert str(entry) == "#3: Nøgne Ø Julefest"
 
 
-class TestEventIsBeerListLocked:
+class TestEventIsLockedForHost:
     def test_when_event_is_open_it_should_be_unlocked(self, make_event, user):
         event = make_event()
         AnswerKey.objects.create(
             event=event, created_by=user, published_at=timezone.now()
         )
-        assert not event.is_beer_list_locked
+        assert not event.is_locked_for_host
 
     def test_when_closed_event_has_no_answer_key_it_should_be_unlocked(
         self, make_event
     ):  # noqa: E501
         event = make_event(closed_at=timezone.now())
-        assert not event.is_beer_list_locked
+        assert not event.is_locked_for_host
 
     def test_when_closed_event_has_unpublished_answer_key_it_should_be_unlocked(
         self, make_event, user
     ):  # noqa: E501
         event = make_event(closed_at=timezone.now())
         AnswerKey.objects.create(event=event, created_by=user)
-        assert not event.is_beer_list_locked
+        assert not event.is_locked_for_host
 
     def test_when_closed_event_has_published_answer_key_it_should_be_locked(
         self, make_event, user
@@ -252,4 +252,4 @@ class TestEventIsBeerListLocked:
         AnswerKey.objects.create(
             event=event, created_by=user, published_at=timezone.now()
         )
-        assert event.is_beer_list_locked
+        assert event.is_locked_for_host

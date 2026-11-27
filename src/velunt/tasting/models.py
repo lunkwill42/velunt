@@ -60,7 +60,7 @@ class Event(models.Model):
         return "open"
 
     @property
-    def is_beer_list_locked(self):
+    def is_locked_for_host(self):
         """Whether results are out, so that the host link can no longer change beers"""
         if self.state != "closed":
             return False

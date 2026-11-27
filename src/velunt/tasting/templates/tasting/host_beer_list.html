@@ -95,7 +95,7 @@
         </div>
     </section>
 
-    {% if event.is_beer_list_locked %}
+    {% if event.is_locked_for_host %}
     <p>{{ locked_message }}</p>
     {% else %}
     <section>

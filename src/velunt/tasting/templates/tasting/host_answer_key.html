@@ -55,7 +55,7 @@
         <p class="host-message">{{ message }}</p>
     {% endfor %}
 
-    {% if event.is_beer_list_locked %}
+    {% if event.is_locked_for_host %}
     <p>{{ locked_message }}</p>
     {% endif %}
     {% if edit.has_errors %}
@@ -69,7 +69,7 @@
     </p>
     <form method="post" action="{% url 'tasting:host_answer_key' event.host_token %}">
         {% csrf_token %}
-        <fieldset{% if event.is_beer_list_locked %} disabled{% endif %}>
+        <fieldset{% if event.is_locked_for_host %} disabled{% endif %}>
             <legend>Øl per nummer</legend>
             {% for row in edit.rows %}
             <div class="answer-row">
