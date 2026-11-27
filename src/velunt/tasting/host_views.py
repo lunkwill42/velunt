@@ -93,13 +93,13 @@ def host_answer_key(request, token):
         return HttpResponseForbidden(ANSWER_KEY_LOCKED_MESSAGE)
     edit = get_answer_key_edit(event, request.POST)
     if edit.has_errors:
-        return _render_answer_key_page(request, event, edit)
+        return _render_answer_key_page(request, event, edit, status=422)
     save_answer_key(event, edit)
     messages.success(request, "Fasiten er lagret.")
     return redirect("tasting:host_answer_key", token=token)
 
 
-def _render_answer_key_page(request, event, edit):
+def _render_answer_key_page(request, event, edit, status=200):
     context = {
         "event": event,
         "edit": edit,
@@ -108,7 +108,7 @@ def _render_answer_key_page(request, event, edit):
         "locked_message": ANSWER_KEY_LOCKED_MESSAGE,
         "errors_message": ANSWER_KEY_ERRORS_MESSAGE,
     }
-    return render(request, "tasting/host_answer_key.html", context)
+    return render(request, "tasting/host_answer_key.html", context, status=status)
 
 
 def _find_import_error(parsed):

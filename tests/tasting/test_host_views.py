@@ -266,6 +266,7 @@ class TestHostAnswerKeyView:
             answer_key_url(event), {"beer_1": "Underlig Jul", "beer_2": "Raudt"}
         )
 
+        assert response.status_code == 422
         assert "Fant ikke «Raudt» på øllisten." in response.content.decode()
         assert not AnswerKey.objects.filter(event=event).exists()
 
