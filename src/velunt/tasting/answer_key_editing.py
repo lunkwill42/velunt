@@ -74,7 +74,11 @@ def get_answer_key_edit(event, data=None):
 
 
 def save_answer_key(event, edit):
-    """Replace the answer key entries with the beers named in a valid `edit`"""
+    """Replace the answer key entries with the beers named in a valid `edit`
+
+    The rows come from the database when the form is posted, not when it was shown.
+    A number that has since left every scorecard is ignored, and the last save wins.
+    """
     with transaction.atomic():
         answer_key, _ = AnswerKey.objects.get_or_create(
             event=event,
