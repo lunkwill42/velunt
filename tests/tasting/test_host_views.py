@@ -1,7 +1,7 @@
 import pytest
 from django.utils import timezone
 
-from velunt.tasting.models import AnswerKey, AnswerKeyEntry, Beer
+from velunt.tasting.models import AnswerKey, AnswerKeyEntry, Beer, Scorecard
 from velunt.tasting.utils import generate_host_token
 
 BEER_LIST = "Navn\tHjemmebrygg\tUntappd\nUnderlig Jul\t\thttps://untappd.com/b/1\n"
@@ -179,6 +179,140 @@ class TestLockedBeerList:
         assert locked_event.beers.exists()
 
 
+class TestHostAnswerKeyView:
+    def test_when_judges_scored_numbers_it_should_list_one_row_per_number(
+        self, client, event
+    ):  # noqa: E501
+        add_scorecard(event, "Ola", [1, 2, 3])
+        add_scorecard(event, "Kari", [1, 3])
+
+        rows = client.get(answer_key_url(event)).context["edit"].rows
+
+        assert [row.beer_number for row in rows] == [1, 2, 3]
+
+    def test_when_number_is_on_few_scorecards_it_should_name_the_judges(
+        self, client, event
+    ):  # noqa: E501
+        add_scorecard(event, "Ola", [1, 21])
+        add_scorecard(event, "Kari", [1])
+        add_scorecard(event, "Per", [1])
+
+        content = client.get(answer_key_url(event)).content.decode()
+
+        assert "Bare hos Ola." in content
+
+    def test_when_a_scorecard_is_empty_it_should_not_count_as_a_judge(
+        self, client, event
+    ):  # noqa: E501
+        add_scorecard(event, "Ola", [1])
+        add_scorecard(event, "Kari", [1])
+        add_scorecard(event, "Ola 2", [])
+
+        row = client.get(answer_key_url(event)).context["edit"].rows[0]
+
+        assert row.is_on_all_scorecards
+
+    def test_when_beers_are_named_it_should_save_them_in_the_answer_key(
+        self, client, event
+    ):  # noqa: E501
+        add_scorecard(event, "Ola", [1, 2])
+        raudt = Beer.objects.create(event=event, name="Raudt Juleøl")
+        jul = Beer.objects.create(event=event, name="Underlig Jul")
+
+        response = client.post(
+            answer_key_url(event), {"beer_1": "raudt juleøl", "beer_2": "Underlig Jul"}
+        )
+
+        assert response.status_code == 302
+        assert answer_key_map(event) == {1: raudt, 2: jul}
+
+    def test_when_new_answer_key_is_saved_it_should_credit_the_event_owner(
+        self, client, event, user
+    ):  # noqa: E501
+        add_scorecard(event, "Ola", [1])
+        Beer.objects.create(event=event, name="Underlig Jul")
+
+        client.post(answer_key_url(event), {"beer_1": "Underlig Jul"})
+
+        assert event.answer_key.created_by == user
+
+    def test_when_row_is_empty_it_should_leave_the_number_out(self, client, event):
+        add_scorecard(event, "Ola", [1, 21])
+        beer = Beer.objects.create(event=event, name="Underlig Jul")
+
+        client.post(answer_key_url(event), {"beer_1": "Underlig Jul", "beer_21": ""})
+
+        assert answer_key_map(event) == {1: beer}
+
+    def test_when_beer_is_served_twice_it_should_accept_it_on_both_numbers(
+        self, client, event
+    ):  # noqa: E501
+        add_scorecard(event, "Ola", [1, 2])
+        beer = Beer.objects.create(event=event, name="Underlig Jul")
+
+        client.post(
+            answer_key_url(event), {"beer_1": "Underlig Jul", "beer_2": "Underlig Jul"}
+        )
+
+        assert answer_key_map(event) == {1: beer, 2: beer}
+
+    def test_when_a_beer_is_unknown_it_should_save_nothing_and_say_why(
+        self, client, event
+    ):  # noqa: E501
+        add_scorecard(event, "Ola", [1, 2])
+        Beer.objects.create(event=event, name="Underlig Jul")
+
+        response = client.post(
+            answer_key_url(event), {"beer_1": "Underlig Jul", "beer_2": "Raudt"}
+        )
+
+        assert "Fant ikke «Raudt» på øllisten." in response.content.decode()
+        assert not AnswerKey.objects.filter(event=event).exists()
+
+    def test_when_number_is_cleared_it_should_remove_its_entry(self, client, event):
+        add_scorecard(event, "Ola", [1])
+        beer = Beer.objects.create(event=event, name="Underlig Jul")
+        answer_key = AnswerKey.objects.create(event=event, created_by=event.owner)
+        AnswerKeyEntry.objects.create(answer_key=answer_key, beer_number=1, beer=beer)
+
+        client.post(answer_key_url(event), {"beer_1": ""})
+
+        assert answer_key_map(event) == {}
+
+    def test_when_number_is_only_in_the_answer_key_it_should_still_be_listed(
+        self, client, event
+    ):  # noqa: E501
+        beer = Beer.objects.create(event=event, name="Underlig Jul")
+        answer_key = AnswerKey.objects.create(event=event, created_by=event.owner)
+        AnswerKeyEntry.objects.create(answer_key=answer_key, beer_number=7, beer=beer)
+
+        rows = client.get(answer_key_url(event)).context["edit"].rows
+
+        assert [(row.beer_number, row.beer_name) for row in rows] == [
+            (7, "Underlig Jul")
+        ]
+
+    def test_when_beer_has_no_number_it_should_be_listed_as_unnumbered(
+        self, client, event
+    ):  # noqa: E501
+        Beer.objects.create(event=event, name="Underlig Jul")
+
+        response = client.get(answer_key_url(event))
+
+        assert [beer.name for beer in response.context["unnumbered_beers"]] == [
+            "Underlig Jul"
+        ]
+
+    def test_when_locked_it_should_refuse_saving(self, client, locked_event):
+        add_scorecard(locked_event, "Ola", [1])
+        Beer.objects.create(event=locked_event, name="Underlig Jul")
+
+        response = client.post(answer_key_url(locked_event), {"beer_1": "Underlig Jul"})
+
+        assert response.status_code == 403
+        assert not locked_event.answer_key.entries.exists()
+
+
 @pytest.fixture()
 def locked_event(event, user):
     event.closed_at = timezone.now()
@@ -194,3 +328,18 @@ def event(make_event):
 
 def host_url(event, suffix=""):
     return f"/host/{event.host_token}/{suffix}"
+
+
+def answer_key_url(event):
+    return host_url(event, "fasit/")
+
+
+def add_scorecard(event, judge_name, beer_numbers):
+    scorecard = Scorecard.objects.create(event=event, judge_name=judge_name)
+    for beer_number in beer_numbers:
+        scorecard.lines.create(beer_number=beer_number)
+
+
+def answer_key_map(event):
+    entries = AnswerKeyEntry.objects.filter(answer_key__event=event)
+    return {entry.beer_number: entry.beer for entry in entries}

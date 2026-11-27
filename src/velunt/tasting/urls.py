@@ -52,6 +52,11 @@ urlpatterns = [
     ),
     path("host/<str:token>/import/", host_views.import_beers, name="import_beers"),
     path(
+        "host/<str:token>/fasit/",
+        host_views.host_answer_key,
+        name="host_answer_key",
+    ),
+    path(
         "host/<str:token>/beer/<int:beer_id>/",
         host_views.delete_beer,
         name="delete_beer",

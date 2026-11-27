@@ -1,0 +1,117 @@
+{% extends "base.html" %}
+
+{% block title %}Fasit: {{ event.description }} - Velunt{% endblock %}
+
+{% block extra_head %}
+<style>
+    .host-message {
+        border-left: 3px solid var(--pico-ins-color, #2e7d32);
+        padding-left: 0.75rem;
+    }
+    .host-error {
+        border-left: 3px solid var(--pico-del-color, #c62828);
+        padding-left: 0.75rem;
+    }
+    .answer-row {
+        display: grid;
+        grid-template-columns: 3rem 1fr;
+        column-gap: 0.75rem;
+        align-items: baseline;
+        margin-bottom: var(--pico-spacing);
+    }
+    .answer-row > label {
+        font-weight: bold;
+        text-align: right;
+    }
+    .answer-row input {
+        margin-bottom: 0;
+    }
+    .answer-row small {
+        grid-column: 2;
+        display: block;
+        margin-top: 0.25rem;
+    }
+    .answer-row .row-warning {
+        color: var(--pico-del-color, #c62828);
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<article>
+    <header>
+        <hgroup>
+            <h1>{{ event.description }}</h1>
+            <p>Her kobler vertskapet hvert ølnummer til ølet som ble servert.</p>
+        </hgroup>
+        {% include "tasting/_calendar_icon.html" with date=event.event_date %}
+    </header>
+
+    <p><a href="{% url 'tasting:host_beer_list' event.host_token %}">Tilbake til øllisten</a></p>
+
+    {% for message in messages %}
+        <p class="host-message">{{ message }}</p>
+    {% endfor %}
+
+    {% if event.is_beer_list_locked %}
+    <p>{{ locked_message }}</p>
+    {% endif %}
+    {% if edit.has_errors %}
+    <p class="host-error">{{ errors_message }}</p>
+    {% endif %}
+
+    {% if edit.rows %}
+    <p>
+        Begynn å skrive, så foreslås øl fra øllisten som inneholder det du skriver.
+        La feltet stå tomt for numre som ikke ble servert.
+    </p>
+    <form method="post" action="{% url 'tasting:host_answer_key' event.host_token %}">
+        {% csrf_token %}
+        <fieldset{% if event.is_beer_list_locked %} disabled{% endif %}>
+            <legend>Øl per nummer</legend>
+            {% for row in edit.rows %}
+            <div class="answer-row">
+                <label for="{{ row.field_name }}">{{ row.beer_number }}</label>
+                <input type="text"
+                       id="{{ row.field_name }}"
+                       name="{{ row.field_name }}"
+                       value="{{ row.beer_name }}"
+                       list="beer-names"
+                       autocomplete="off"
+                       {% if row.error %}aria-invalid="true" aria-describedby="{{ row.field_name }}-error"{% endif %}>
+                {% if row.error %}
+                <small id="{{ row.field_name }}-error" class="row-warning">{{ row.error }}</small>
+                {% endif %}
+                {% if not row.judge_names %}
+                <small class="row-warning">Ingen dommerskjema har dette nummeret.</small>
+                {% elif row.is_on_few_scorecards %}
+                <small class="row-warning">Bare hos {{ row.judge_names|join:", " }}.</small>
+                {% elif not row.is_on_all_scorecards %}
+                <small>På {{ row.judge_names|length }} av {{ row.total_judges }} skjema.</small>
+                {% endif %}
+                {% if row.sibling_numbers %}
+                <small>Samme øl som {% for number in row.sibling_numbers %}#{{ number }}{% if not forloop.last %}, {% endif %}{% endfor %}.</small>
+                {% endif %}
+            </div>
+            {% endfor %}
+            <datalist id="beer-names">
+                {% for beer in beers %}<option value="{{ beer.name }}"></option>{% endfor %}
+            </datalist>
+            <button type="submit">Lagre fasit</button>
+        </fieldset>
+    </form>
+    {% else %}
+    <p>Ingen dommerskjema har ølnumre ennå, så det er ingenting å lage fasit for.</p>
+    {% endif %}
+
+    {% if unnumbered_beers %}
+    <section>
+        <h2>Øl uten nummer</h2>
+        <p>Disse ølene på øllisten er ikke med i den lagrede fasiten:</p>
+        <ul>
+            {% for beer in unnumbered_beers %}<li>{{ beer.name }}</li>{% endfor %}
+        </ul>
+    </section>
+    {% endif %}
+</article>
+{% endblock %}

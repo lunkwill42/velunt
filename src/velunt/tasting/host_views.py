@@ -4,12 +4,21 @@ from django.contrib import messages
 from django.http import HttpResponseForbidden, HttpResponseNotAllowed
 from django.shortcuts import get_object_or_404, redirect, render
 
+from velunt.tasting.answer_key_editing import (
+    get_answer_key_edit,
+    get_unnumbered_beers,
+    save_answer_key,
+)
 from velunt.tasting.beer_import import import_beer_list, parse_beer_list
 from velunt.tasting.models import Beer, Event
 
 LOCKED_MESSAGE = "Resultatene er publisert, så øllisten kan ikke lenger endres."
 NO_BEERS_MESSAGE = "Fant ingen øl i innlimingen, så ingenting ble endret."
 ERRORS_MESSAGE = "Innlimingen har feil, så ingenting ble endret. Se under."
+ANSWER_KEY_LOCKED_MESSAGE = "Resultatene er publisert, så fasiten kan ikke endres her."
+ANSWER_KEY_ERRORS_MESSAGE = (
+    "Noen øl finnes ikke på øllisten, så fasiten ble ikke lagret."
+)
 
 
 def host_beer_list(request, token):
@@ -72,6 +81,34 @@ def delete_beer(request, token, beer_id):
         "tasting/_host_beer_list.html",
         {"event": event, "beers": _get_beers(event), "error": error},
     )
+
+
+def host_answer_key(request, token):
+    event = _get_event(token)
+    if request.method == "GET":
+        return _render_answer_key_page(request, event, get_answer_key_edit(event))
+    if request.method != "POST":
+        return HttpResponseNotAllowed(["GET", "POST"])
+    if event.is_beer_list_locked:
+        return HttpResponseForbidden(ANSWER_KEY_LOCKED_MESSAGE)
+    edit = get_answer_key_edit(event, request.POST)
+    if edit.has_errors:
+        return _render_answer_key_page(request, event, edit)
+    save_answer_key(event, edit)
+    messages.success(request, "Fasiten er lagret.")
+    return redirect("tasting:host_answer_key", token=token)
+
+
+def _render_answer_key_page(request, event, edit):
+    context = {
+        "event": event,
+        "edit": edit,
+        "beers": event.beers.all(),
+        "unnumbered_beers": get_unnumbered_beers(event),
+        "locked_message": ANSWER_KEY_LOCKED_MESSAGE,
+        "errors_message": ANSWER_KEY_ERRORS_MESSAGE,
+    }
+    return render(request, "tasting/host_answer_key.html", context)
 
 
 def _find_import_error(parsed):
